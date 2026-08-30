@@ -12,6 +12,7 @@
   ],
   "builds": [
     { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "api/*.py", "use": "@vercel/python" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "js/**", "use": "@vercel/static" },
     { "src": "SETUP-MPESA.md", "use": "@vercel/static" }
@@ -21,6 +22,8 @@
     { "src": "/api/stkpush", "dest": "/api/stkpush.js" },
     { "src": "/api/stkstatus", "dest": "/api/stkstatus.js" },
     { "src": "/api/callback", "dest": "/api/callback.js" },
+    { "src": "/api/verify", "dest": "/api/verify.py" },
+    { "src": "/api/barcode", "dest": "/api/barcode.py" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "cicioxpdf417",
+  "version": "1.0.0",
+  "description": "AAMVA PDF417 Driver License Generator with M-Pesa Integration",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

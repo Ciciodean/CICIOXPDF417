@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
+      ]
+    }
+  ],
+  "builds": [
+    { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "js/**", "use": "@vercel/static" },
+    { "src": "SETUP-MPESA.md", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/config", "dest": "/api/config.js" },
+    { "src": "/api/stkpush", "dest": "/api/stkpush.js" },
+    { "src": "/api/stkstatus", "dest": "/api/stkstatus.js" },
+    { "src": "/api/callback", "dest": "/api/callback.js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

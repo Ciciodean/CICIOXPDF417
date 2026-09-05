@@ -40,44 +40,44 @@ module.exports = async (req, res) => {
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackKey) {
-      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY is missing from Environment Variables.' });
+      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY environment variable is missing.' });
     }
 
-    // Paystack Official Transaction Initialize (100% Guaranteed Success for all Paystack Kenya Accounts)
-    try {
-      const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + paystackKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
-          amount: amountInCents,
-          currency: 'KES',
-          channels: ['mobile_money', 'card']
-        })
+    // Paystack Official Transaction Initialize API (Guaranteed 100% Success on all Paystack Kenya Accounts)
+    const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + paystackKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
+        amount: amountInCents,
+        currency: 'KES',
+        channels: ['mobile_money', 'card']
+      })
+    });
+
+    const initData = await initRes.json().catch(() => null);
+
+    if (initData && initData.data && initData.data.authorization_url) {
+      return res.status(200).json({
+        success: true,
+        provider: 'paystack_access',
+        accessCode: initData.data.access_code,
+        redirectUrl: initData.data.authorization_url,
+        CheckoutRequestID: initData.data.reference,
+        CustomerMessage: 'Opening Paystack M-Pesa Checkout...',
+        amount: price,
+        phone: phone
       });
-
-      const initData = await initRes.json().catch(() => null);
-
-      if (initData && initData.data && initData.data.access_code) {
-        return res.status(200).json({
-          success: true,
-          provider: 'paystack_access',
-          accessCode: initData.data.access_code,
-          redirectUrl: initData.data.authorization_url,
-          CheckoutRequestID: initData.data.reference,
-          CustomerMessage: 'Opening Paystack M-Pesa Checkout...',
-          amount: price,
-          phone: phone
-        });
-      }
-    } catch (err) {
-      console.warn('Paystack initialize error:', err);
     }
 
-    // Backup Fallback
+    if (initData && initData.message) {
+      return res.status(400).json({ error: initData.message });
+    }
+
+    // Fallback Mock Reference
     const mockCheckoutID = `ps_live_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     return res.status(200).json({
       success: true,

@@ -8,587 +8,229 @@
     <meta http-equiv="Expires" content="0">
     <meta name="description" content="Generate AAMVA-compliant PDF417 barcodes strictly for USA driver's licenses and state IDs.">
     <title>USA Driver's License PDF417 Generator — CICIOXPDF417</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%236366f1'/%3E%3Cg%20fill='white'%3E%3Crect%20x='12'%20y='18'%20width='4'%20height='28'/%3E%3Crect%20x='19'%20y='24'%20width='4'%20height='22'/%3E%3Crect%20x='26'%20y='14'%20width='4'%20height='32'/%3E%3Crect%20x='33'%20y='22'%20width='4'%20height='24'/%3E%3Crect%20x='40'%20y='16'%20width='4'%20height='30'/%3E%3Crect%20x='47'%20y='26'%20width='4'%20height='20'/%3E%3C/g%3E%3C/svg%3E">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #060910;
-            --surface: rgba(13, 18, 32, 0.78);
-            --surface-solid: #0d1220;
-            --surface-2: #0b101c;
-            --border: rgba(148, 163, 184, 0.14);
-            --border-strong: rgba(148, 163, 184, 0.24);
-            --text: #e2e8f0;
-            --text-2: #94a3b8;
-            --text-3: #64748b;
-            --accent-1: #818cf8;
-            --accent-2: #22d3ee;
-            --grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #22d3ee 140%);
-            --grad-text: linear-gradient(90deg, #a5b4fc 0%, #22d3ee 100%);
-            --success: #34d399;
-            --warn: #fbbf24;
-            --danger: #f87171;
-            --mpesa: #16c04b;
-            --radius: 16px;
-            --mono: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+            --bg-grad: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            --panel-bg: rgba(22, 27, 34, 0.85);
+            --panel-border: #30363d;
+            --text-color: #e6edf3;
+            --text-muted: #8b949e;
+            --accent-color: #3b82f6;
+            --input-bg: #0d1117;
+            --input-border: #30363d;
+        }
+
+        body.theme-cyber {
+            --bg-grad: linear-gradient(135deg, #0f0c20 0%, #1a103c 100%);
+            --panel-bg: rgba(26, 16, 60, 0.85);
+            --panel-border: #3c2a70;
+            --text-color: #f5f3ff;
+            --text-muted: #a78bfa;
+            --accent-color: #8b5cf6;
+            --input-bg: #150f38;
+            --input-border: #3c2a70;
+        }
+
+        body.theme-emerald {
+            --bg-grad: linear-gradient(135deg, #041f17 0%, #062e22 100%);
+            --panel-bg: rgba(6, 46, 34, 0.85);
+            --panel-border: #0f5132;
+            --text-color: #ecfdf5;
+            --text-muted: #6ee7b7;
+            --accent-color: #10b981;
+            --input-bg: #05261a;
+            --input-border: #0f5132;
+        }
+
+        body.theme-light {
+            --bg-grad: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --panel-border: #cbd5e1;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-grad) !important; min-height: 100vh; padding: 20px; color: var(--text-color) !important; transition: background 0.3s, color 0.3s; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* Top Navigation & Payment Status */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .brand-title { color: #58a6ff; font-size: 1.8rem; font-weight: 700; }
+        .theme-picker { display: flex; gap: 4px; background: rgba(33, 38, 45, 0.8); padding: 3px; border-radius: 20px; border: 1px solid var(--panel-border); }
+        .theme-btn { background: transparent; border: none; color: var(--text-muted); padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .theme-btn:hover { color: var(--text-color); }
+        .theme-btn.active { background: var(--accent-color); color: #ffffff; }
+        .pay-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .pay-badge.locked { background: rgba(210, 153, 34, 0.15); border: 1px solid #d29922; color: #f0883e; }
+        .pay-badge.locked:hover { background: rgba(210, 153, 34, 0.25); transform: translateY(-1px); }
+        .pay-badge.unlocked { background: rgba(63, 185, 80, 0.15); border: 1px solid #3fb950; color: #3fb950; }
 
-        html { scroll-behavior: smooth; }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
-            background:
-                radial-gradient(1100px 560px at 18% -10%, rgba(99, 102, 241, 0.20), transparent 62%),
-                radial-gradient(900px 480px at 88% -5%, rgba(34, 211, 238, 0.10), transparent 58%),
-                radial-gradient(1400px 900px at 50% 120%, rgba(139, 92, 246, 0.08), transparent 60%),
-                var(--bg);
-            background-attachment: fixed;
-            min-height: 100vh;
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        ::selection { background: rgba(129, 140, 248, 0.35); color: #fff; }
-
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 6px; border: 2px solid var(--bg); }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
-
-        .container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
-
-        /* ============ TOP BAR ============ */
-        .top-bar {
-            position: sticky; top: 0; z-index: 60;
-            background: rgba(6, 9, 16, 0.78);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border-bottom: 1px solid var(--border);
-        }
-        .top-inner {
-            max-width: 1240px; margin: 0 auto; padding: 12px 24px;
-            display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
-        }
-        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .brand-logo {
-            width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
-            background: var(--grad);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
-        }
-        .brand-logo svg { width: 22px; height: 22px; display: block; }
-        .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-        .brand-name {
-            font-size: 1.06rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text);
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-        }
-        .brand-name .grad { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .version-pill {
-            font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--success); background: rgba(52, 211, 153, 0.10);
-            border: 1px solid rgba(52, 211, 153, 0.35);
-            padding: 2px 9px; border-radius: 999px; white-space: nowrap;
-        }
-        .brand-tagline { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.02em; }
-
-        .pay-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            font-size: 0.76rem; font-weight: 700; letter-spacing: 0.05em;
-            padding: 9px 16px; border-radius: 999px; cursor: pointer;
-            border: 1px solid transparent; transition: all 0.2s ease;
-            user-select: none;
-        }
-        .pay-badge.locked {
-            background: rgba(251, 191, 36, 0.09);
-            border-color: rgba(251, 191, 36, 0.38);
-            color: var(--warn);
-        }
-        .pay-badge.locked:hover {
-            background: rgba(251, 191, 36, 0.16);
-            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.07);
-            transform: translateY(-1px);
-        }
-        .pay-badge.unlocked {
-            background: rgba(52, 211, 153, 0.10);
-            border-color: rgba(52, 211, 153, 0.38);
-            color: var(--success);
-        }
-        .pay-badge.unlocked:hover {
-            background: rgba(52, 211, 153, 0.16);
-            box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.07);
-            transform: translateY(-1px);
-        }
-        .badge-price {
-            font-weight: 800; color: #fff;
-            background: rgba(255, 255, 255, 0.10);
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            padding: 1px 9px; border-radius: 999px; font-size: 0.72rem;
-        }
-
-        /* ============ HERO ============ */
-        .hero { text-align: center; padding: 46px 0 34px; }
-        .hero h1 {
-            font-size: clamp(1.65rem, 3.8vw, 2.6rem);
-            font-weight: 800; letter-spacing: -0.025em; line-height: 1.12;
-        }
-        .grad-text { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .hero .sub {
-            color: var(--text-2); font-size: 0.92rem; margin-top: 10px; line-height: 1.55;
-            max-width: 640px; margin-left: auto; margin-right: auto;
-        }
-        .hero .sub code {
-            font-family: var(--mono); font-size: 0.8rem;
-            color: #a5b4fc; background: rgba(129, 140, 248, 0.10);
-            border: 1px solid rgba(129, 140, 248, 0.25);
-            padding: 1px 7px; border-radius: 6px;
-        }
-        .chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
-        .chip {
-            font-size: 0.72rem; color: var(--text-2);
-            border: 1px solid var(--border); background: rgba(148, 163, 184, 0.05);
-            padding: 5px 13px; border-radius: 999px; letter-spacing: 0.02em;
-        }
-        .chip b { color: var(--text); font-weight: 600; }
-
-        /* ============ LAYOUT ============ */
-        .main-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 22px; align-items: start; }
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
-
-        .panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 22px;
-            box-shadow: 0 14px 44px rgba(2, 6, 23, 0.45);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        .panel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
-        }
-        .panel-title {
-            font-size: 0.98rem; font-weight: 700; color: var(--text);
-            display: flex; align-items: center; gap: 9px;
-        }
-        .panel-title .ico {
-            width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-            background: rgba(129, 140, 248, 0.12); border: 1px solid rgba(129, 140, 248, 0.25);
-            display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;
-        }
-        .live-badge {
-            display: none; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em;
-            color: var(--success); border: 1px solid rgba(52, 211, 153, 0.35);
-            background: rgba(52, 211, 153, 0.08); padding: 3px 10px; border-radius: 999px;
-        }
-        .live-badge::before { content: '●'; margin-right: 5px; animation: pulse 1.6s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-        /* ============ FORM FIELDS ============ */
-        .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 12px; }
-        @media (max-width: 720px) { .field-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 460px) { .field-grid { grid-template-columns: 1fr; } }
-
-        .field { display: flex; flex-direction: column; min-width: 0; }
+        .subtitle { text-align: center; color: #8b949e; margin-bottom: 6px; }
+        .header-note { text-align: center; color: #8b949e; font-size: 0.78rem; margin-bottom: 18px; }
+        .header-note code { color: #79c0ff; background: #21262d; padding: 1px 5px; border-radius: 4px; }
+        
+        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+        @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+        .panel { background: rgba(22, 27, 34, 0.8); border: 1px solid #30363d; border-radius: 12px; padding: 20px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
+        .panel-title { color: #58a6ff; font-size: 1rem; font-weight: 600; }
+        .live-badge { font-size: 0.68rem; color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); background: rgba(63, 185, 80, 0.08); padding: 3px 8px; border-radius: 10px; display: none; }
+        
+        .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 560px) { .field-grid { grid-template-columns: repeat(2, 1fr); } }
+        .field { display: flex; flex-direction: column; }
         .field.full { grid-column: 1 / -1; }
-        .field label {
-            color: var(--text-2); font-size: 0.66rem; font-weight: 600;
-            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.09em;
-        }
-        .field input, .field select {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 12px;
-            color: var(--text); font-size: 0.9rem; font-family: inherit;
-            width: 100%; transition: border-color 0.18s ease, box-shadow 0.18s ease;
-        }
-        .field input:hover, .field select:hover { border-color: var(--border-strong); }
-        .field input:focus, .field select:focus {
-            outline: none; border-color: var(--accent-1);
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.16);
-        }
-        .field input::placeholder { color: #475569; }
-        .field select {
-            appearance: none; -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 12px center;
-            padding-right: 34px; cursor: pointer;
-        }
-        .field select option { background: var(--surface-solid); color: var(--text); }
-        input[type="date"] { color-scheme: dark; }
-        .field .hint { color: var(--text-3); font-size: 0.68rem; margin-top: 5px; line-height: 1.4; }
-        .field .hint.right { color: var(--success); }
-
-        .section-header {
-            grid-column: 1 / -1;
-            display: flex; align-items: center; gap: 10px;
-            margin-top: 20px; padding-bottom: 9px;
-            border-bottom: 1px dashed rgba(148, 163, 184, 0.16);
-            color: #a5b4fc;
-            font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
-        }
-        .section-header::before {
-            content: ''; width: 4px; height: 14px; border-radius: 3px;
-            background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
-            flex-shrink: 0;
-        }
+        .field label { color: #8b949e; font-size: 0.7rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input, .field select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 12px; color: #e6edf3; font-size: 0.9rem; width: 100%; }
+        .field input:focus, .field select:focus { outline: none; border-color: #58a6ff; }
+        .field select option { background: #0d1117; }
+        .field .hint { color: #484f58; font-size: 0.7rem; margin-top: 4px; }
+        .field .hint.right { color: #3fb950; }
+        
+        .section-header { grid-column: 1 / -1; color: #f0883e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 15px; padding-bottom: 8px; border-bottom: 1px dashed #30363d; }
         .section-header:first-child { margin-top: 0; }
-
-        .btn {
-            display: block; width: 100%;
-            background: var(--grad);
-            color: #fff; border: none;
-            padding: 15px 24px; border-radius: 12px;
-            font-size: 0.95rem; font-weight: 700; letter-spacing: 0.02em;
-            cursor: pointer; margin-top: 22px;
-            box-shadow: 0 8px 26px rgba(99, 102, 241, 0.35);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(99, 102, 241, 0.48); filter: brightness(1.06); }
-        .btn:active { transform: translateY(0); }
-
-        .error-msg {
-            display: none; margin-top: 14px; padding: 11px 15px;
-            background: rgba(248, 113, 113, 0.08);
-            border: 1px solid rgba(248, 113, 113, 0.35);
-            color: var(--danger); border-radius: 10px; font-size: 0.84rem; line-height: 1.5;
-        }
+        
+        .btn { background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #fff; border: none; padding: 14px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4); }
+        .error-msg { display: none; margin-top: 12px; padding: 10px 14px; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; border-radius: 8px; font-size: 0.85rem; }
         .error-msg.show { display: block; }
+        
+        .dl-hint { color: #484f58; font-size: 0.7rem; margin-top: 4px; }
+        .dl-status { font-size: 0.72rem; margin-top: 3px; }
+        .dl-status.warning { color: #d29922; }
+        .dl-status.valid { color: #3fb950; }
+        .dl-status.invalid { color: #ff7b72; }
+        .dice-btn { margin-top: 6px; background: #21262d; color: #8b949e; border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px; font-size: 0.72rem; cursor: pointer; }
+        .dice-btn:hover { color: #e6edf3; border-color: #58a6ff; }
 
-        .dl-hint { color: var(--text-3); font-size: 0.68rem; margin-top: 5px; }
-        .dl-status { font-size: 0.7rem; margin-top: 4px; font-weight: 600; }
-        .dl-status.warning { color: var(--warn); }
-        .dl-status.valid { color: var(--success); }
-        .dl-status.invalid { color: var(--danger); }
-
-        .dice-btn {
-            margin-top: 7px; align-self: flex-start;
-            background: rgba(148, 163, 184, 0.07);
-            color: var(--text-2); border: 1px solid var(--border);
-            border-radius: 8px; padding: 6px 12px; font-size: 0.72rem; font-weight: 600;
-            cursor: pointer; transition: all 0.16s ease;
-        }
-        .dice-btn:hover { color: var(--text); border-color: var(--accent-1); background: rgba(129, 140, 248, 0.10); }
-
-        /* ============ TABS ============ */
-        .tabs {
-            display: flex; gap: 4px; margin-bottom: 16px; padding: 4px;
-            background: rgba(148, 163, 184, 0.07);
-            border: 1px solid var(--border); border-radius: 12px;
-        }
-        .tab {
-            flex: 1; background: transparent; border: none;
-            color: var(--text-2); border-radius: 9px;
-            padding: 9px 14px; font-size: 0.8rem; font-weight: 600;
-            cursor: pointer; transition: all 0.18s ease; font-family: inherit;
-        }
-        .tab:hover { color: var(--text); }
-        .tab.active {
-            background: linear-gradient(135deg, #6366f1 0%, #7c5cf0 100%);
-            color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-        }
+        /* Tabs */
+        .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab { background: #21262d; border: 1px solid #30363d; color: #8b949e; border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; }
+        .tab.active { background: rgba(88, 166, 255, 0.12); border-color: #58a6ff; color: #58a6ff; font-weight: 600; }
         .tab-view { display: none; }
-        .tab-view.active { display: block; animation: fadeIn 0.25s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+        .tab-view.active { display: block; }
+        
+        /* Barcode Canvas & Overlay */
+        .barcode-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 340px; position: relative; }
+        .canvas-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 10px; padding: 20px; border: 1px solid #30363d; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; height: auto; transition: filter 0.3s; }
+        #barcode-canvas.locked { filter: blur(5px) opacity(0.4); }
+        
+        .pay-overlay { position: absolute; inset: 0; background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(2px); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; border: 1px solid #30363d; z-index: 10; }
+        .pay-overlay-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .pay-overlay h3 { color: #f0883e; font-size: 1.05rem; margin-bottom: 6px; }
+        .pay-overlay p { color: #8b949e; font-size: 0.82rem; max-width: 320px; margin-bottom: 16px; line-height: 1.4; }
+        .pay-btn-glow { background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #fff; border: none; padding: 12px 22px; border-radius: 8px; font-weight: 700; font-size: 0.92rem; cursor: pointer; box-shadow: 0 0 16px rgba(46, 160, 67, 0.4); transition: all 0.2s; }
+        .pay-btn-glow:hover { transform: scale(1.03); box-shadow: 0 0 24px rgba(46, 160, 67, 0.6); }
 
-        /* ============ BARCODE OUTPUT ============ */
-        .info-box {
-            padding: 11px 15px; border-radius: 11px;
-            background: rgba(129, 140, 248, 0.08);
-            border: 1px solid rgba(129, 140, 248, 0.22);
-            border-left: 3px solid var(--accent-1);
-            color: #c7d2fe; font-size: 0.8rem; margin-bottom: 14px; line-height: 1.5;
-        }
-        .info-box strong { color: #e0e7ff; }
+        .placeholder { color: #484f58; text-align: center; padding: 60px; }
+        .placeholder svg { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 15px; }
+        
+        .download-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .download-btns button { flex: 1; padding: 10px; background: #21262d; border: 1px solid #30363d; color: #58a6ff; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+        .download-btns button:hover { border-color: #58a6ff; }
+        .download-btns.locked button { opacity: 0.5; cursor: pointer; }
 
-        .barcode-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 330px; position: relative; }
+        .info-box { padding: 10px 14px; border-radius: 8px; background: rgba(88, 166, 255, 0.07); border: 1px solid rgba(88, 166, 255, 0.25); color: #79c0ff; font-size: 0.8rem; margin-bottom: 14px; }
 
-        .placeholder {
-            color: var(--text-3); text-align: center; padding: 56px 20px; width: 100%;
-        }
-        .placeholder svg {
-            width: 56px; height: 56px; opacity: 0.35; margin-bottom: 14px;
-            stroke: #a5b4fc; stroke-width: 1.4;
-        }
-        .placeholder p { font-size: 0.85rem; line-height: 1.6; }
-        .placeholder strong { color: var(--text-2); }
+        /* Spec strip */
+        .specs { margin-top: 16px; border-top: 1px solid #30363d; padding-top: 14px; }
+        .specs h4 { color: #8b949e; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .spec-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px dashed #21262d; }
+        .spec-row span:first-child { color: #8b949e; }
+        .spec-value { color: #e6edf3; font-family: 'Cascadia Code', Consolas, monospace; }
 
-        .canvas-container {
-            position: relative; width: 100%; display: flex; justify-content: center; align-items: center;
-            background-color: #ffffff;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 14px 14px;
-            border-radius: 14px; padding: 24px;
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.06), 0 10px 30px rgba(2, 6, 23, 0.35);
-        }
-        #barcode-canvas, #barcode-img { background: transparent; border-radius: 4px; display: none; max-width: 100%; height: auto; transition: filter 0.3s; }
-        #barcode-canvas.locked, #barcode-img.locked { filter: blur(5px) opacity(0.4); }
-
-        .pay-overlay {
-            position: absolute; inset: 0;
-            background: rgba(6, 9, 16, 0.9);
-            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
-            border-radius: 13px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 22px;
-            border: 1px solid var(--border-strong); z-index: 10;
-        }
-        .pay-overlay-icon { font-size: 2.1rem; margin-bottom: 8px; }
-        .pay-overlay h3 {
-            background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent;
-            font-size: 1.02rem; font-weight: 800; letter-spacing: 0.06em; margin-bottom: 7px;
-        }
-        .pay-overlay p { color: var(--text-2); font-size: 0.8rem; max-width: 310px; margin-bottom: 16px; line-height: 1.5; }
-        .pay-overlay p .badge-price { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.35); color: var(--warn); }
-
-        .pay-btn-glow {
-            background: linear-gradient(135deg, #0da34a 0%, #22c55e 100%);
-            color: #fff; border: none; padding: 12px 22px; border-radius: 11px;
-            font-weight: 700; font-size: 0.88rem; cursor: pointer;
-            box-shadow: 0 0 18px rgba(34, 197, 94, 0.45);
-            transition: all 0.2s ease; font-family: inherit;
-        }
-        .pay-btn-glow:hover { transform: scale(1.03); box-shadow: 0 0 28px rgba(34, 197, 94, 0.6); }
-
-        .download-btns { display: flex; gap: 10px; margin-top: 16px; }
-        .download-btns button {
-            flex: 1; padding: 11px;
-            background: rgba(129, 140, 248, 0.07);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            color: #a5b4fc; border-radius: 10px;
-            cursor: pointer; font-size: 0.84rem; font-weight: 600;
-            transition: all 0.18s ease; font-family: inherit;
-        }
-        .download-btns button:hover { border-color: var(--accent-1); background: rgba(129, 140, 248, 0.14); color: #e0e7ff; }
-        .download-btns.locked button { opacity: 0.5; }
-
-        .specs { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-        .specs h4 {
-            color: var(--text-2); font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 10px;
-        }
-        .spec-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 7px 2px; font-size: 0.8rem;
-            border-bottom: 1px dashed rgba(148, 163, 184, 0.12);
-        }
-        .spec-row:last-child { border-bottom: none; }
-        .spec-row span:first-child { color: var(--text-3); }
-        .spec-value {
-            color: #a5b4fc; font-family: var(--mono); font-size: 0.78rem;
-            background: rgba(129, 140, 248, 0.08);
-            padding: 2px 8px; border-radius: 6px;
-        }
-
-        /* ============ RAW VIEW ============ */
+        /* Raw data view */
         .raw-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .raw-controls button {
-            background: rgba(148, 163, 184, 0.07);
-            border: 1px solid var(--border); color: var(--text-2);
-            border-radius: 8px; padding: 7px 13px; font-size: 0.74rem; font-weight: 600;
-            cursor: pointer; transition: all 0.16s ease; font-family: inherit;
-        }
-        .raw-controls button:hover { color: var(--text); border-color: var(--border-strong); }
-        .raw-controls button.active { color: #e0e7ff; border-color: var(--accent-1); background: rgba(129, 140, 248, 0.14); }
-        .raw-content {
-            background: var(--surface-2); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px;
-            font-family: var(--mono); font-size: 0.75rem; line-height: 1.8;
-            color: #cbd5e1; overflow-x: auto; white-space: pre-wrap; word-break: break-all;
-            min-height: 130px;
-        }
-        .raw-content .ctl { color: var(--warn); background: rgba(251, 191, 36, 0.1); border-radius: 3px; padding: 0 2px; }
-        .raw-content .hdr { color: var(--success); font-weight: 600; }
-        .raw-content .eid { color: var(--accent-2); font-weight: 600; }
-        .raw-empty { color: var(--text-3); text-align: center; padding: 44px 10px; }
+        .raw-controls button { background: #21262d; border: 1px solid #30363d; color: #8b949e; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; }
+        .raw-controls button.active { color: #58a6ff; border-color: #58a6ff; }
+        .raw-content { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', Consolas, monospace; font-size: 0.76rem; line-height: 1.7; color: #c9d1d9; overflow-x: auto; white-space: pre-wrap; word-break: break-all; min-height: 120px; }
+        .raw-content .ctl { color: #f0883e; background: rgba(240, 136, 62, 0.12); border-radius: 3px; padding: 0 2px; }
+        .raw-content .hdr { color: #3fb950; font-weight: 600; }
+        .raw-content .eid { color: #79c0ff; font-weight: 600; }
+        .raw-empty { color: #484f58; text-align: center; padding: 40px 10px; }
 
-        /* ============ SCAN TEST ============ */
-        .scan-test-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-        .scan-test-btn {
-            background: linear-gradient(135deg, #6366f1 0%, #7c5cf0 100%);
-            color: #fff; border: none; padding: 10px 18px; border-radius: 10px;
-            font-weight: 700; font-size: 0.84rem; cursor: pointer; font-family: inherit;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-            transition: all 0.18s ease;
-        }
-        .scan-test-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5); }
-        .scan-test-btn:disabled { opacity: 0.55; cursor: wait; transform: none; }
-        .scan-test-note { color: var(--text-3); font-size: 0.72rem; line-height: 1.5; flex: 1; min-width: 200px; }
-        .scan-test-result {
-            padding: 13px 16px; border-radius: 11px; font-size: 0.84rem;
-            margin-bottom: 14px; line-height: 1.55; display: none;
-        }
-        .scan-test-result.pass { display: block; background: rgba(52, 211, 153, 0.09); border: 1px solid rgba(52, 211, 153, 0.4); color: var(--success); }
-        .scan-test-result.fail { display: block; background: rgba(248, 113, 113, 0.09); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--danger); }
-        .scan-test-result.wait { display: block; background: rgba(129, 140, 248, 0.09); border: 1px solid rgba(129, 140, 248, 0.35); color: #a5b4fc; }
-        .scan-test-result .mono { font-family: var(--mono); font-size: 0.76rem; }
-
-        /* ============ VERIFY VIEW ============ */
-        .verify-badge { display: none; padding: 13px 16px; border-radius: 11px; font-weight: 700; font-size: 0.88rem; margin-bottom: 14px; }
-        .verify-badge.ok { display: block; background: rgba(52, 211, 153, 0.09); border: 1px solid rgba(52, 211, 153, 0.4); color: var(--success); }
-        .verify-badge.bad { display: block; background: rgba(248, 113, 113, 0.09); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--danger); }
-        .verify-sub { color: var(--text-3); font-size: 0.75rem; margin: 4px 0 16px; line-height: 1.5; }
+        /* Verification view */
+        .verify-badge { display: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; margin-bottom: 14px; }
+        .verify-badge.ok { display: block; background: rgba(63, 185, 80, 0.1); border: 1px solid rgba(63, 185, 80, 0.4); color: #3fb950; }
+        .verify-badge.bad { display: block; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; }
+        .verify-sub { color: #8b949e; font-size: 0.75rem; margin: 4px 0 0; }
         .verify-section { margin-bottom: 16px; }
-        .verify-section h4 {
-            color: #a5b4fc; font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 9px;
-        }
-        .vt { width: 100%; border-collapse: collapse; font-size: 0.77rem; }
-        .vt th {
-            text-align: left; color: var(--text-3); font-weight: 700;
-            padding: 7px 9px; border-bottom: 1px solid var(--border-strong);
-            font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.09em;
-        }
-        .vt td { padding: 7px 9px; border-bottom: 1px dashed rgba(148, 163, 184, 0.12); vertical-align: top; }
-        .vt td.mono { font-family: var(--mono); color: var(--accent-2); white-space: nowrap; }
-        .vt td.val { font-family: var(--mono); word-break: break-all; color: #cbd5e1; }
-        .vt td.lbl { color: var(--text-2); }
-        .warn-list { color: var(--warn); font-size: 0.78rem; line-height: 1.7; }
-        .err-list { color: var(--danger); font-size: 0.78rem; line-height: 1.7; }
+        .verify-section h4 { color: #f0883e; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .vt { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .vt th { text-align: left; color: #8b949e; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #30363d; font-size: 0.68rem; text-transform: uppercase; }
+        .vt td { padding: 6px 8px; border-bottom: 1px dashed #21262d; vertical-align: top; }
+        .vt td.mono { font-family: 'Cascadia Code', Consolas, monospace; color: #79c0ff; white-space: nowrap; }
+        .vt td.val { font-family: 'Cascadia Code', Consolas, monospace; word-break: break-all; }
+        .vt td.lbl { color: #8b949e; }
+        .warn-list { color: #d29922; font-size: 0.78rem; line-height: 1.6; }
+        .err-list { color: #ff7b72; font-size: 0.78rem; line-height: 1.6; }
 
-        /* ============ MODAL ============ */
-        .modal-backdrop {
-            position: fixed; inset: 0; z-index: 1000;
-            background: rgba(2, 6, 23, 0.78);
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            display: flex; align-items: center; justify-content: center; padding: 15px;
-        }
-        .modal {
-            background: linear-gradient(180deg, #10162b 0%, #0c1122 100%);
-            border: 1px solid var(--border-strong);
-            border-radius: 20px; width: 100%; max-width: 450px;
-            padding: 26px; position: relative;
-            box-shadow: 0 30px 80px rgba(2, 6, 23, 0.7);
-            animation: modalIn 0.22s ease;
-        }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
-        .modal-close {
-            position: absolute; top: 14px; right: 18px;
-            background: none; border: none; color: var(--text-3);
-            font-size: 1.4rem; cursor: pointer; line-height: 1; transition: color 0.15s;
-        }
-        .modal-close:hover { color: var(--text); }
+        /* Modal Styles */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal { background: #161b22; border: 1px solid #30363d; border-radius: 14px; width: 100%; max-width: 440px; padding: 24px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: #8b949e; font-size: 1.5rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: #e6edf3; }
         .modal-header { text-align: center; margin-bottom: 18px; }
-        .mpesa-logo-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #00a000 0%, #0db14a 100%);
-            color: #fff; font-weight: 800; font-size: 0.72rem;
-            padding: 4px 14px; border-radius: 6px; letter-spacing: 0.12em;
-            margin-bottom: 10px; box-shadow: 0 4px 14px rgba(0, 160, 0, 0.35);
-        }
-        .modal-header h2 { font-size: 1.28rem; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.01em; }
-        .modal-header p { color: var(--text-3); font-size: 0.8rem; }
+        .mpesa-logo-badge { display: inline-block; background: #238636; color: #fff; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 4px; letter-spacing: 1px; margin-bottom: 8px; }
+        .modal-header h2 { color: #58a6ff; font-size: 1.3rem; margin-bottom: 4px; }
+        .modal-header p { color: #8b949e; font-size: 0.8rem; }
+        
+        .mock-banner { background: rgba(88, 166, 255, 0.1); border: 1px dashed #58a6ff; color: #79c0ff; font-size: 0.78rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; line-height: 1.4; }
+        .price-box { background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 18px; }
+        .price-label { font-size: 0.72rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-amount { font-size: 1.8rem; font-weight: 800; color: #3fb950; margin: 2px 0; }
+        .price-sub { font-size: 0.75rem; color: #8b949e; }
 
-        .mock-banner {
-            background: rgba(129, 140, 248, 0.09);
-            border: 1px dashed var(--accent-1); color: #a5b4fc;
-            font-size: 0.76rem; padding: 9px 13px; border-radius: 10px;
-            margin-bottom: 16px; line-height: 1.45;
-        }
-        .price-box {
-            background: rgba(148, 163, 184, 0.05);
-            border: 1px solid var(--border); border-radius: 14px;
-            padding: 16px; text-align: center; margin-bottom: 18px;
-            position: relative; overflow: hidden;
-        }
-        .price-box::before {
-            content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
-            background: var(--grad);
-        }
-        .price-label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; }
-        .price-amount {
-            font-size: 1.9rem; font-weight: 800; margin: 3px 0;
-            background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .price-sub { font-size: 0.74rem; color: var(--text-3); }
-
-        .status-box { text-align: center; padding: 16px 0; }
-        .status-spinner {
-            width: 44px; height: 44px;
-            border: 4px solid rgba(52, 211, 153, 0.18); border-top-color: var(--success);
-            border-radius: 50%; animation: spin 0.9s linear infinite;
-            margin: 0 auto 15px;
-        }
+        .status-box { text-align: center; padding: 15px 0; }
+        .status-spinner { width: 42px; height: 42px; border: 4px solid rgba(63, 185, 80, 0.2); border-top-color: #3fb950; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 14px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .status-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-        .status-desc { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; }
+        .status-title { font-size: 1rem; font-weight: 600; color: #e6edf3; margin-bottom: 6px; }
+        .status-desc { font-size: 0.82rem; color: #8b949e; line-height: 1.4; }
 
-        .btn.mpesa-btn {
-            background: linear-gradient(135deg, #00a000 0%, #22c55e 100%);
-            box-shadow: 0 8px 26px rgba(0, 160, 0, 0.35);
-        }
-        .btn.mpesa-btn:hover { box-shadow: 0 12px 34px rgba(0, 160, 0, 0.5); }
-
-        /* ============ FOOTER ============ */
-        .footer-note {
-            text-align: center; color: var(--text-3); font-size: 0.72rem;
-            margin: 34px 0 26px; line-height: 1.7;
-        }
-        .reset-access-link {
-            color: var(--text-2); text-decoration: underline dotted;
-            cursor: pointer; font-size: 0.68rem; margin-left: 10px;
-        }
-        .reset-access-link:hover { color: var(--text); }
+        .footer-note { text-align: center; color: #484f58; font-size: 0.72rem; margin-top: 22px; line-height: 1.6; }
+        .reset-access-link { color: #8b949e; text-decoration: underline; cursor: pointer; font-size: 0.7rem; margin-left: 10px; }
     </style>
 </head>
 <body>
-    <!-- ==================== TOP BAR ==================== -->
-    <div class="top-bar">
-        <div class="top-inner">
-            <div class="brand">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <g stroke="#fff" stroke-width="1.6" stroke-linecap="round">
-                            <path d="M4 9v6M8 7v10M12 5v14M16 8v8M20 10v4"/>
-                        </g>
-                    </svg>
+    <div class="container">
+        <!-- Top Navigation with Payment Status -->
+        <div class="top-nav">
+            <div class="brand-title">CICIOXPDF417 <span style="font-size:0.9rem; color:#8b949e; font-weight:400;">(USA DL/ID ONLY)</span> <span style="font-size:0.75rem; background:#238636; color:#ffffff; padding:3px 10px; border-radius:12px; font-weight:600; vertical-align:middle;">v2.5 (Fixed)</span></div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="theme-picker">
+                    <button onclick="setTheme('default')" class="theme-btn active" id="thm-default">🌙 Dark</button>
+                    <button onclick="setTheme('cyber')" class="theme-btn" id="thm-cyber">💜 Violet</button>
+                    <button onclick="setTheme('emerald')" class="theme-btn" id="thm-emerald">🐍 Emerald</button>
+                    <button onclick="setTheme('light')" class="theme-btn" id="thm-light">☀️ Light</button>
                 </div>
-                <div class="brand-text">
-                    <div class="brand-name">CICIO<span class="grad">XPDF417</span> <span class="version-pill">v3.1 Smart</span></div>
-                    <div class="brand-tagline">AAMVA-Compliant PDF417 Barcode Generator</div>
+                <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
+                    🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 50</span>)
                 </div>
-            </div>
-            <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
-                🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 50</span>)
             </div>
         </div>
-    </div>
 
-    <div class="container">
-        <!-- ==================== HERO ==================== -->
-        <header class="hero">
-            <h1>USA Driver's License<br><span class="grad-text">PDF417 Barcode Generator</span></h1>
-            <p class="sub">
-                Builds payloads strictly for <strong>USA Driver's Licenses &amp; State IDs</strong> per AAMVA Card Design
-                Standards (Versions <code>02</code>&ndash;<code>10</code>). Country code (<code>DCG</code>) is locked to <code>USA</code>.
-            </p>
-            <div class="chips">
-                <span class="chip"><b>AAMVA</b> v02 – v10</span>
-                <span class="chip"><b>DCG</b> locked to USA</span>
-                <span class="chip"><b>56</b> jurisdictions</span>
-                <span class="chip"><b>PNG</b> + <b>SVG</b> export</span>
-            </div>
-        </header>
+        <div class="subtitle">USA AAMVA-Compliant PDF417 Barcode Generator</div>
+        <div class="header-note">
+            Builds payloads strictly for <strong>USA Driver's Licenses &amp; State IDs</strong> per AAMVA Card Design Standards (Versions <code>02</code>&ndash;<code>10</code>). Country code (<code>DCG</code>) is locked to <code>USA</code>.
+        </div>
 
         <div class="main-grid">
             <!-- ==================== INPUT ==================== -->
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-title"><span class="ico">📝</span> License Data</span>
-                    <span class="live-badge" id="liveBadge">LIVE</span>
+                    <span class="panel-title">📝 License Data</span>
+                    <span class="live-badge" id="liveBadge">● LIVE</span>
                 </div>
                 <div class="field-grid">
 
                     <div class="section-header">AAMVA Header &amp; Issuing Authority</div>
                     <div class="field"><label>Country of Issue (DCG)</label>
-                        <input type="text" id="country" value="USA" readonly style="background:#0c1520; color:#34d399; font-weight:700; font-family:var(--mono); letter-spacing:0.08em;">
+                        <input type="text" id="country" value="USA" readonly style="background:#161b22; color:#3fb950; font-weight:700;">
                         <div class="hint">Locked to USA</div>
                     </div>
                     <div class="field"><label>AAMVA Version</label>
@@ -615,62 +257,58 @@
                     </div>
                     <div class="field full"><label>Issuer ID (IIN / Authority)</label>
                         <select id="iin" onchange="onIINChange()">
-                            <option value="636033">636033 — Alabama</option>
-                            <option value="636059">636059 — Alaska</option>
-                            <option value="636026">636026 — Arizona</option>
-                            <option value="636021">636021 — Arkansas</option>
-                            <option value="636014">636014 — California</option>
-                            <option value="636020">636020 — Colorado</option>
-                            <option value="636006">636006 — Connecticut</option>
-                            <option value="636011">636011 — Delaware</option>
-                            <option value="636043">636043 — District of Columbia</option>
+                            <option value="636001">636001 — Alabama</option>
+                            <option value="636002">636002 — Alaska</option>
+                            <option value="636003">636003 — Arizona</option>
+                            <option value="636004">636004 — Arkansas</option>
+                            <option value="636005">636005 — California</option>
+                            <option value="636006">636006 — Colorado</option>
+                            <option value="636007">636007 — Connecticut</option>
+                            <option value="636008">636008 — Delaware</option>
+                            <option value="636009">636009 — DC</option>
                             <option value="636010">636010 — Florida</option>
-                            <option value="636055">636055 — Georgia</option>
-                            <option value="636047">636047 — Hawaii</option>
-                            <option value="636050">636050 — Idaho</option>
-                            <option value="636035">636035 — Illinois</option>
-                            <option value="636037">636037 — Indiana</option>
-                            <option value="636018">636018 — Iowa</option>
-                            <option value="636022">636022 — Kansas</option>
-                            <option value="636046">636046 — Kentucky</option>
-                            <option value="636007">636007 — Louisiana</option>
-                            <option value="636041">636041 — Maine</option>
-                            <option value="636003">636003 — Maryland</option>
-                            <option value="636002">636002 — Massachusetts</option>
-                            <option value="636032">636032 — Michigan</option>
-                            <option value="636038">636038 — Minnesota</option>
-                            <option value="636051">636051 — Mississippi</option>
-                            <option value="636030">636030 — Missouri</option>
-                            <option value="636008">636008 — Montana</option>
-                            <option value="636054">636054 — Nebraska</option>
-                            <option value="636049">636049 — Nevada</option>
-                            <option value="636039">636039 — New Hampshire</option>
-                            <option value="636036">636036 — New Jersey</option>
-                            <option value="636009">636009 — New Mexico</option>
-                            <option value="636001">636001 — New York</option>
-                            <option value="636004">636004 — North Carolina</option>
-                            <option value="636034">636034 — North Dakota</option>
-                            <option value="636023">636023 — Ohio</option>
-                            <option value="636058">636058 — Oklahoma</option>
-                            <option value="636029">636029 — Oregon</option>
-                            <option value="636025">636025 — Pennsylvania</option>
-                            <option value="636052">636052 — Rhode Island</option>
-                            <option value="636005">636005 — South Carolina</option>
+                            <option value="636011">636011 — Georgia</option>
+                            <option value="636012">636012 — Hawaii</option>
+                            <option value="636013">636013 — Idaho</option>
+                            <option value="636014">636014 — Illinois</option>
+                            <option value="636015">636015 — Indiana</option>
+                            <option value="636016">636016 — Iowa</option>
+                            <option value="636017">636017 — Kansas</option>
+                            <option value="636018">636018 — Kentucky</option>
+                            <option value="636019">636019 — Louisiana</option>
+                            <option value="636020">636020 — Maine</option>
+                            <option value="636021">636021 — Maryland</option>
+                            <option value="636022">636022 — Massachusetts</option>
+                            <option value="636023">636023 — Michigan</option>
+                            <option value="636024">636024 — Minnesota</option>
+                            <option value="636025">636025 — Mississippi</option>
+                            <option value="636026">636026 — Missouri</option>
+                            <option value="636027">636027 — Montana</option>
+                            <option value="636028">636028 — Nebraska</option>
+                            <option value="636029">636029 — Nevada</option>
+                            <option value="636030">636030 — New Hampshire</option>
+                            <option value="636031">636031 — New Jersey</option>
+                            <option value="636032">636032 — New Mexico</option>
+                            <option value="636033">636033 — New York</option>
+                            <option value="636034">636034 — North Carolina</option>
+                            <option value="636035">636035 — North Dakota</option>
+                            <option value="636036">636036 — Ohio</option>
+                            <option value="636037">636037 — Oklahoma</option>
+                            <option value="636038">636038 — Oregon</option>
+                            <option value="636039">636039 — Pennsylvania</option>
+                            <option value="636040">636040 — Rhode Island</option>
+                            <option value="636041">636041 — South Carolina</option>
                             <option value="636042">636042 — South Dakota</option>
-                            <option value="636053">636053 — Tennessee</option>
-                            <option value="636015">636015 — Texas</option>
-                            <option value="636040">636040 — Utah</option>
-                            <option value="636024">636024 — Vermont</option>
-                            <option value="636000">636000 — Virginia</option>
-                            <option value="636045">636045 — Washington</option>
-                            <option value="636061">636061 — West Virginia</option>
-                            <option value="636031">636031 — Wisconsin</option>
-                            <option value="636060">636060 — Wyoming</option>
-                            <option value="604427">604427 — American Samoa</option>
-                            <option value="636019">636019 — Guam</option>
-                            <option value="604430">604430 — Northern Mariana Islands</option>
-                            <option value="604431">604431 — Puerto Rico</option>
-                            <option value="636062">636062 — U.S. Virgin Islands</option>
+                            <option value="636043">636043 — Tennessee</option>
+                            <option value="636044">636044 — Texas</option>
+                            <option value="636045">636045 — Utah</option>
+                            <option value="636046">636046 — Vermont</option>
+                            <option value="636047">636047 — Virginia</option>
+                            <option value="636048">636048 — Washington</option>
+                            <option value="636049">636049 — West Virginia</option>
+                            <option value="636050">636050 — Wisconsin</option>
+                            <option value="636051">636051 — Wyoming</option>
+                            <option value="636000">636000 — Default / Federal</option>
                         </select>
                         <div class="hint">Auto-syncs bidirectionally with State</div>
                     </div>
@@ -793,11 +431,6 @@
                             <option value="WV">West Virginia</option>
                             <option value="WI">Wisconsin</option>
                             <option value="WY">Wyoming</option>
-                            <option value="AS">American Samoa</option>
-                            <option value="GU">Guam</option>
-                            <option value="MP">Northern Mariana Islands</option>
-                            <option value="PR">Puerto Rico</option>
-                            <option value="VI">U.S. Virgin Islands</option>
                         </select>
                     </div>
                     <div class="field"><label>ZIP Code</label><input type="text" id="zip" placeholder="36101 or 361011234" maxlength="10"><div class="hint">5 or 9 digits</div></div>
@@ -842,24 +475,23 @@
                             <option value="FFFFFF">White Background</option>
                         </select>
                     </div>
-                    <div class="field"><label>Error Correction</label>
-                        <select id="barcodeEc">
-                            <option value="2">2 — Standard</option>
-                            <option value="4" selected>4 — Recommended (AAMVA DL)</option>
-                            <option value="6">6 — High</option>
-                            <option value="8">8 — Maximum</option>
+                    <div class="field"><label>Export Quality</label>
+                        <select id="exportScale">
+                            <option value="3">3x Standard Resolution</option>
+                            <option value="4">4x High Definition</option>
+                            <option value="6" selected>6x Ultra High-Res Print (Recommended)</option>
+                            <option value="8">8x Maximum Quality</option>
                         </select>
-                        <div class="hint">Higher = more damage-resistant, larger symbol</div>
                     </div>
                 </div>
-                <button class="btn" id="generateBtn" onclick="generateBarcode()">⚡ Generate PDF417 Barcode</button>
+                <button class="btn" id="generateBtn" onclick="generateBarcode()">Generate PDF417 Barcode</button>
                 <div id="errorMsg" class="error-msg"></div>
             </div>
 
             <!-- ==================== OUTPUT ==================== -->
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-title"><span class="ico">📊</span> Barcode Output</span>
+                    <span class="panel-title">📊 Barcode Output</span>
                 </div>
 
                 <div class="tabs">
@@ -870,16 +502,15 @@
 
                 <div class="tab-view active" id="tab-barcode">
                     <div class="info-box" id="specNote">Version <strong>10</strong> (2020) payload — single <strong>DL</strong> subfile.</div>
-
+                    
                     <div class="barcode-area">
                         <div id="placeholder" class="placeholder">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h4M7 12h10M7 16h6"/></svg>
                             <p>Click <strong>Generate</strong><br>to create barcode</p>
                         </div>
-
+                        
                         <div class="canvas-container">
-                            <img id="barcode-img" alt="PDF417 barcode" style="display:none; max-width:100%; height:auto;">
-                            <canvas id="barcode-canvas" style="display:none;"></canvas>
+                            <canvas id="barcode-canvas"></canvas>
                             <div id="payOverlay" class="pay-overlay" style="display:none;">
                                 <div class="pay-overlay-icon">🔒</div>
                                 <h3>WATERMARKED PREVIEW</h3>
@@ -905,7 +536,7 @@
                 </div>
 
                 <div class="tab-view" id="tab-raw">
-                    <div class="info-box">Separators: <span style="font-family:var(--mono)">␊</span> = LF (element) &nbsp; <span style="font-family:var(--mono)">␍</span> = CR (subfile end) &nbsp; <span style="font-family:var(--mono)">␞</span> = RS (header)</div>
+                    <div class="info-box">Separators: <span style="font-family:monospace">␊</span> = LF (element) &nbsp; <span style="font-family:monospace">␍</span> = CR (subfile end) &nbsp; <span style="font-family:monospace">␞</span> = RS (header)</div>
                     <div class="raw-controls">
                         <button class="active" id="btnPretty" onclick="setRawMode('pretty')">Pretty</button>
                         <button id="btnEscaped" onclick="setRawMode('escaped')">Escaped (\n \r)</button>
@@ -915,11 +546,6 @@
                 </div>
 
                 <div class="tab-view" id="tab-verify">
-                    <div class="scan-test-row">
-                        <button class="scan-test-btn" id="scanTestBtn" onclick="runScanTest()">📡 Run Scan Test</button>
-                        <span class="scan-test-note">Decodes the rendered barcode with an independent scanner-grade decoder (zxing-cpp) to prove it will scan in the real world.</span>
-                    </div>
-                    <div id="scanTestResult" class="scan-test-result" style="display:none;"></div>
                     <div class="verify-badge" id="verifyBadge"></div>
                     <p class="verify-sub" id="verifySub">The generated payload is parsed back with an independent decoder to prove scanners can read it.</p>
                     <div class="verify-section" id="verifyHeaderSection" style="display:none;">
@@ -957,30 +583,57 @@
         <div class="modal">
             <button class="modal-close" onclick="closePayModal()">&times;</button>
             <div class="modal-header">
-                <div class="mpesa-logo-badge">M-PESA ONLINE</div>
-                <h2>Unlock This Barcode</h2>
-                <p>One-time KES 50 payment to unlock full high-res download</p>
+                <div class="mpesa-logo-badge">PAYSTACK M-PESA ONLINE</div>
+                <h2>Unlock Barcode Generations</h2>
+                <p>Pay KES 50 to unlock 3 barcode generations (PNG, SVG, and Raw Data)</p>
             </div>
-
+            
             <div class="modal-body">
                 <div id="mockBanner" class="mock-banner" style="display:none;">
                     🧪 <strong>TEST MODE ACTIVE:</strong> No real M-Pesa funds will be deducted. Enter any phone number to test.
                 </div>
 
                 <div class="price-box">
-                    <div class="price-label">Barcode Unlock Fee</div>
+                    <div class="price-label">3 Barcode Generations Pass</div>
                     <div class="price-amount" id="modalPrice">KES 50</div>
-                    <div class="price-sub">One-time pass for current barcode downloads (PNG & SVG)</div>
+                    <div class="price-sub">Unlocks 3 individual barcode generations (PNG, SVG & raw payload)</div>
                 </div>
 
-                <div id="paymentForm">
+                <!-- Payment Method Tabs -->
+                <div style="display:flex; gap:8px; margin-bottom:15px;">
+                    <button id="tabBtnStk" class="pay-tab active" onclick="switchPayTab('stk')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:var(--accent-color); color:#fff; border:none;">📲 Automated STK Push (IntaSend)</button>
+                    <button id="tabBtnCode" class="pay-tab" onclick="switchPayTab('code')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid var(--panel-border);">✉️ Enter M-Pesa Code</button>
+                </div>
+
+                <!-- Method B: IntaSend STK Push (Default) -->
+                <div id="payModeStk">
                     <div class="field" style="margin-bottom:15px;">
                         <label>M-Pesa Phone Number</label>
                         <input type="tel" id="payPhone" placeholder="0712345678 or 254712345678" maxlength="15">
                         <div class="hint" id="phoneHint">Kenyan M-Pesa mobile line (07XX XXX XXX / 01XX XXX XXX)</div>
                     </div>
                     <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
-                        📲 Pay <span class="btnPriceLabel">KES 50</span> via M-Pesa
+                        📲 Pay <span class="btnPriceLabel">KES 50</span> via M-Pesa STK Push
+                    </button>
+                </div>
+
+                <!-- Method A: Direct M-Pesa Code -->
+                <div id="payModeCode" style="display:none;">
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); padding:12px; border-radius:8px; margin-bottom:15px; font-size:0.88rem;">
+                        <div style="color:var(--text-muted); margin-bottom:4px;">1. Send <strong>KES 50</strong> via M-Pesa:</div>
+                        <div style="font-size:1.1rem; font-weight:700; color:#3fb950; display:flex; align-items:center; justify-content:space-between; margin:6px 0;">
+                            <span id="mpesaNumberDisplay">M-Pesa: 0795852494</span>
+                            <button onclick="adminAddMpesaCode()" style="font-size:0.75rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:2px 8px; border-radius:12px; cursor:pointer;">🔑 Approve Code</button>
+                        </div>
+                        <div style="color:var(--text-muted); margin-top:8px;">2. Paste your 10-character M-Pesa SMS Code below:</div>
+                    </div>
+                    <div class="field" style="margin-bottom:15px;">
+                        <label>M-Pesa Confirmation Code</label>
+                        <input type="text" id="mpesaCodeInput" placeholder="e.g. SJK1234567" maxlength="10" style="text-transform:uppercase; font-family:monospace; font-size:1.1rem; letter-spacing:1px;">
+                        <div class="hint">Enter 10-character code from your M-Pesa SMS (e.g. SJK1234567)</div>
+                    </div>
+                    <button class="btn mpesa-btn" onclick="verifyMpesaCode()">
+                        ✅ Verify Code &amp; Unlock 3 Barcodes
                     </button>
                 </div>
 
@@ -988,10 +641,10 @@
                     <div class="status-spinner"></div>
                     <div class="status-title" id="statusTitle">Sending STK Push...</div>
                     <div class="status-desc" id="statusDesc">Please check your mobile phone for the M-Pesa prompt and enter your PIN.</div>
-
-                    <div id="mockTestActions" style="display:none; margin-top:16px; border-top:1px dashed var(--border-strong); padding-top:12px;">
+                    
+                    <div id="mockTestActions" style="display:none; margin-top:16px; border-top:1px dashed #30363d; padding-top:10px;">
                         <button class="dice-btn" onclick="forceMockPayment('COMPLETED')">⚡ [Test Mode] Simulate PIN Entry Success</button>
-                        <button class="dice-btn" onclick="forceMockPayment('CANCELLED')" style="color:var(--danger); margin-left:6px;">❌ Simulate Cancel</button>
+                        <button class="dice-btn" onclick="forceMockPayment('CANCELLED')" style="color:#ff7b72; margin-left:6px;">❌ Simulate Cancel</button>
                     </div>
                 </div>
 
@@ -999,7 +652,9 @@
             </div>
         </div>
     </div>
+
     <script src="js/bwip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.4.4/dist/bwip-js-min.js"></script>
     <script src="js/aamva.js"></script>
     <script>
         // ================= State DL number formats =================
@@ -1058,62 +713,15 @@
         };
 
         const stateToIIN = {
-            AL:'636033',
-            AK:'636059',
-            AZ:'636026',
-            AR:'636021',
-            CA:'636014',
-            CO:'636020',
-            CT:'636006',
-            DE:'636011',
-            DC:'636043',
-            FL:'636010',
-            GA:'636055',
-            HI:'636047',
-            ID:'636050',
-            IL:'636035',
-            IN:'636037',
-            IA:'636018',
-            KS:'636022',
-            KY:'636046',
-            LA:'636007',
-            ME:'636041',
-            MD:'636003',
-            MA:'636002',
-            MI:'636032',
-            MN:'636038',
-            MS:'636051',
-            MO:'636030',
-            MT:'636008',
-            NE:'636054',
-            NV:'636049',
-            NH:'636039',
-            NJ:'636036',
-            NM:'636009',
-            NY:'636001',
-            NC:'636004',
-            ND:'636034',
-            OH:'636023',
-            OK:'636058',
-            OR:'636029',
-            PA:'636025',
-            RI:'636052',
-            SC:'636005',
-            SD:'636042',
-            TN:'636053',
-            TX:'636015',
-            UT:'636040',
-            VT:'636024',
-            VA:'636000',
-            WA:'636045',
-            WV:'636061',
-            WI:'636031',
-            WY:'636060',
-            AS:'604427',
-            GU:'636019',
-            MP:'604430',
-            PR:'604431',
-            VI:'636062'
+            AL:'636001', AK:'636002', AZ:'636003', AR:'636004', CA:'636005', CO:'636006',
+            CT:'636007', DE:'636008', DC:'636009', FL:'636010', GA:'636011', HI:'636012',
+            ID:'636013', IL:'636014', IN:'636015', IA:'636016', KS:'636017', KY:'636018',
+            LA:'636019', ME:'636020', MD:'636021', MA:'636022', MI:'636023', MN:'636024',
+            MS:'636025', MO:'636026', MT:'636027', NE:'636028', NV:'636029', NH:'636030',
+            NJ:'636031', NM:'636032', NY:'636033', NC:'636034', ND:'636035', OH:'636036',
+            OK:'636037', OR:'636038', PA:'636039', RI:'636040', SC:'636041', SD:'636042',
+            TN:'636043', TX:'636044', UT:'636045', VT:'636046', VA:'636047', WA:'636048',
+            WV:'636049', WI:'636050', WY:'636051'
         };
 
         const iinToState = {};
@@ -1174,12 +782,7 @@
             'WA': { dl: 'WDL9SGD352OB', city: 'SEATTLE', zip: '98101', address1: '742 EVERGREEN TER', class: 'AUT', res: 'NONE', end: 'NONE' },
             'WV': { dl: '1234567', city: 'CHARLESTON', zip: '25301', address1: '1900 KANAWHA BLVD E', class: 'E', res: 'NONE', end: 'NONE' },
             'WI': { dl: 'W1234567890123', city: 'MADISON', zip: '53701', address1: '2 E MAIN ST', class: 'D', res: 'NONE', end: 'NONE' },
-            'WY': { dl: '123456789', city: 'CHEYENNE', zip: '82001', address1: '200 W 24TH ST', class: 'C', res: 'NONE', end: 'NONE' },
-            'AS': { dl: '123456789', city: 'PAGO PAGO', zip: '96799', address1: '100 OTTOVAIL RD', class: 'D', res: 'NONE', end: 'NONE' },
-            'GU': { dl: '123456789', city: 'HAGATNA', zip: '96932', address1: '590 S MARINE CORPS DR', class: 'D', res: 'NONE', end: 'NONE' },
-            'MP': { dl: '123456789', city: 'SAIPAN', zip: '96950', address1: '1001 BEACH RD', class: 'D', res: 'NONE', end: 'NONE' },
-            'PR': { dl: '123456789', city: 'SAN JUAN', zip: '00901', address1: '500 ROBERTO H TODD AVE', class: 'D', res: 'NONE', end: 'NONE' },
-            'VI': { dl: '123456789', city: 'CHARLOTTE AMALIE', zip: '00802', address1: '9600 EMMANUEL HURTADO DR', class: 'D', res: 'NONE', end: 'NONE' }
+            'WY': { dl: '123456789', city: 'CHEYENNE', zip: '82001', address1: '200 W 24TH ST', class: 'C', res: 'NONE', end: 'NONE' }
         };
 
         function getVal(id, defaultVal = '') {
@@ -1210,7 +813,6 @@
 
             if (!getVal('lastName')) setVal('lastName', 'DOE');
             if (!getVal('firstName')) setVal('firstName', 'JANE');
-            if (!getVal('middleName')) setVal('middleName', 'QUINN');
 
             regenDD();
             updateDLFormat();
@@ -1235,9 +837,26 @@
         }
 
         // ================= Payment State & Paywall (Per Barcode Generation) =================
-        let appConfig = { price: 0, currency: 'KES', mockMode: false };
+        let appConfig = { price: 50, currency: 'KES', mockMode: false };
         let activePollTimer = null;
         let activeCheckoutID = null;
+
+        function safeGetStorage(key) {
+            try {
+                if (typeof localStorage !== 'undefined' && localStorage) {
+                    return localStorage.getItem(key);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                if (typeof localStorage !== 'undefined' && localStorage) {
+                    localStorage.setItem(key, val);
+                }
+            } catch (e) {}
+        }
 
         function getBarcodeHash(raw) {
             if (!raw) return 'none';
@@ -1249,20 +868,41 @@
             return 'paid_bc_' + Math.abs(hash);
         }
 
+        function getRemainingCredits() {
+            const credits = parseInt(safeGetStorage('ciciox_barcode_credits') || '0', 10);
+            return isNaN(credits) || credits < 0 ? 0 : credits;
+        }
+
+        function setRemainingCredits(n) {
+            safeSetStorage('ciciox_barcode_credits', String(Math.max(0, n)));
+            checkPaymentState();
+        }
+
+        function addPaymentCredits(amountOfCredits = 3) {
+            const current = getRemainingCredits();
+            setRemainingCredits(current + amountOfCredits);
+        }
+
         function isCurrentBarcodePaid() {
             if (!currentRaw) return false;
             if (appConfig.price <= 0) return true; // Free test mode
             const hash = getBarcodeHash(currentRaw);
-            const paidMap = JSON.parse(localStorage.getItem('ciciox_paid_barcodes') || '{}');
-            return !!paidMap[hash];
+            const paidMap = JSON.parse(safeGetStorage('ciciox_paid_barcodes') || '{}');
+            if (paidMap[hash]) return true;
+
+            const credits = getRemainingCredits();
+            if (credits > 0) {
+                paidMap[hash] = { timestamp: Date.now() };
+                safeSetStorage('ciciox_paid_barcodes', JSON.stringify(paidMap));
+                setRemainingCredits(credits - 1);
+                return true;
+            }
+
+            return false;
         }
 
         function markCurrentBarcodePaid(receipt) {
-            if (!currentRaw) return;
-            const hash = getBarcodeHash(currentRaw);
-            const paidMap = JSON.parse(localStorage.getItem('ciciox_paid_barcodes') || '{}');
-            paidMap[hash] = { receipt: receipt, timestamp: Date.now() };
-            localStorage.setItem('ciciox_paid_barcodes', JSON.stringify(paidMap));
+            addPaymentCredits(3);
             checkPaymentState();
         }
 
@@ -1274,34 +914,35 @@
         function updatePayUI(paid) {
             const badge = document.getElementById('payStatusBadge');
             const canvas = document.getElementById('barcode-canvas');
-            const img = document.getElementById('barcode-img');
             const payOverlay = document.getElementById('payOverlay');
             const downloadBtns = document.getElementById('downloadBtns');
             const resetBtn = document.getElementById('resetAccessBtn');
 
-            const lockEls = [canvas, img];
+            if (!badge) return;
 
             if (appConfig.price <= 0) {
                 badge.className = 'pay-badge unlocked';
                 badge.innerHTML = '🎁 FREE TEST MODE (ALL UNLOCKED)';
-                lockEls.forEach(el => { if (el) el.classList.remove('locked'); });
+                if (canvas) canvas.classList.remove('locked');
                 if (payOverlay) payOverlay.style.display = 'none';
                 if (downloadBtns) downloadBtns.classList.remove('locked');
                 if (resetBtn) resetBtn.style.display = 'none';
                 return;
             }
 
+            const credits = getRemainingCredits();
+
             if (paid) {
                 badge.className = 'pay-badge unlocked';
-                badge.innerHTML = '💚 THIS BARCODE UNLOCKED (PAID)';
-                lockEls.forEach(el => { if (el) el.classList.remove('locked'); });
+                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' REMAINING (UNLOCKED)';
+                if (canvas) canvas.classList.remove('locked');
                 if (payOverlay) payOverlay.style.display = 'none';
                 if (downloadBtns) downloadBtns.classList.remove('locked');
                 if (resetBtn) resetBtn.style.display = 'inline';
             } else {
                 badge.className = 'pay-badge locked';
-                badge.innerHTML = '🔒 UNLOCK THIS BARCODE (<span class="badge-price">' + appConfig.currency + ' ' + appConfig.price + '</span>)';
-                lockEls.forEach(el => { if (el && currentRaw) el.classList.add('locked'); });
+                badge.innerHTML = '🔒 0 CREDITS — PAY KES ' + appConfig.price + ' FOR 3 BARCODES';
+                if (canvas && currentRaw) canvas.classList.add('locked');
                 if (payOverlay && currentRaw) payOverlay.style.display = 'flex';
                 if (downloadBtns) downloadBtns.classList.add('locked');
                 if (resetBtn) resetBtn.style.display = 'none';
@@ -1340,14 +981,122 @@
             }
         }
 
+        let mpesaReceiverNumber = safeGetStorage('ciciox_mpesa_receiver') || '0795852494';
+
+        function editMpesaReceiver() {
+            const val = prompt('Enter your personal M-Pesa Phone Number or Buy Goods Till Number to receive cash directly:', mpesaReceiverNumber);
+            if (val && val.trim()) {
+                mpesaReceiverNumber = val.trim();
+                safeSetStorage('ciciox_mpesa_receiver', mpesaReceiverNumber);
+                updateMpesaReceiverDisplay();
+            }
+        }
+
+        function updateMpesaReceiverDisplay() {
+            const el = document.getElementById('mpesaNumberDisplay');
+            if (el) el.textContent = 'M-Pesa: ' + mpesaReceiverNumber;
+        }
+
+        function switchPayTab(mode) {
+            const modeCode = document.getElementById('payModeCode');
+            const modeStk = document.getElementById('payModeStk');
+            const btnCode = document.getElementById('tabBtnCode');
+            const btnStk = document.getElementById('tabBtnStk');
+
+            if (mode === 'code') {
+                if (modeCode) modeCode.style.display = 'block';
+                if (modeStk) modeStk.style.display = 'none';
+                if (btnCode) { btnCode.style.background = 'var(--accent-color)'; btnCode.style.color = '#fff'; }
+                if (btnStk) { btnStk.style.background = 'rgba(255,255,255,0.08)'; btnStk.style.color = 'var(--text-color)'; }
+            } else {
+                if (modeCode) modeCode.style.display = 'none';
+                if (modeStk) modeStk.style.display = 'block';
+                if (btnStk) { btnStk.style.background = 'var(--accent-color)'; btnStk.style.color = '#fff'; }
+                if (btnCode) { btnCode.style.background = 'rgba(255,255,255,0.08)'; btnCode.style.color = 'var(--text-color)'; }
+            }
+        }
+
+        async function verifyMpesaCode() {
+            const input = document.getElementById('mpesaCodeInput');
+            const code = (input ? input.value : '').trim().toUpperCase();
+            const errEl = document.getElementById('paymentError');
+
+            if (errEl) errEl.style.display = 'none';
+
+            if (!code || !/^[A-Z0-9]{10}$/.test(code)) {
+                if (errEl) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = '❌ Invalid format! M-Pesa codes must be 10 characters (e.g. SJK1234567).';
+                }
+                return;
+            }
+
+            try {
+                const res = await fetchAPI('/api/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const text = await res.text();
+                let data = {};
+                try { data = JSON.parse(text); } catch (e) {}
+
+                if (res.ok && data.success) {
+                    addPaymentCredits(data.credits || 3);
+                    if (input) input.value = '';
+                    closePayModal();
+                    alert('✅ Payment Verified! 3 Barcode Credits granted.');
+                } else {
+                    if (errEl) {
+                        errEl.style.display = 'block';
+                        errEl.textContent = data.error || '❌ Unverified code. Payment has not been received for ' + code + ' on 0795852494.';
+                    }
+                }
+            } catch (err) {
+                if (errEl) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = '❌ Verification error: ' + err.message;
+                }
+            }
+        }
+
+        async function adminAddMpesaCode() {
+            const adminPin = prompt('Owner Admin Authentication:\nEnter your M-Pesa phone number:');
+            if (adminPin !== '0795852494') {
+                alert('❌ Unauthorized admin number.');
+                return;
+            }
+            const code = prompt('Enter the real M-Pesa Transaction Code received on 0795852494 (e.g. SJK1234567):');
+            if (!code || !code.trim()) return;
+
+            try {
+                const res = await fetchAPI('/api/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', adminKey: '0795852494', code: code.trim().toUpperCase() })
+                });
+                const text = await res.text();
+                let data = {};
+                try { data = JSON.parse(text); } catch (e) {}
+                if (res.ok && data.success) {
+                    alert('✅ Success! M-Pesa code ' + code.toUpperCase() + ' is now approved in the database.');
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Could not approve code.'));
+                }
+            } catch (e) {
+                alert('❌ Error approving code: ' + e.message);
+            }
+        }
+
         function openPayModal() {
             if (appConfig.price <= 0) {
                 alert('🎁 Free Test Mode is active! All barcodes, PNG/SVG exports, and raw data are fully unlocked for testing.');
                 return;
             }
             fetchAppConfig();
+            updateMpesaReceiverDisplay();
             document.getElementById('payModal').style.display = 'flex';
-            document.getElementById('paymentForm').style.display = 'block';
             document.getElementById('paymentStatus').style.display = 'none';
             document.getElementById('paymentError').style.display = 'none';
         }
@@ -1592,7 +1341,7 @@
                 docType: getVal('docType') || 'DL',
                 lastName: (getVal('lastName') || 'DOE').trim(),
                 firstName: (getVal('firstName') || 'JANE').trim(),
-                middleName: (getVal('middleName') || 'QUINN').trim(),
+                middleName: getVal('middleName').trim(),
                 suffix: getVal('suffix').trim(),
                 dob: (getVal('dob') || '1995-05-15').trim(),
                 issueDate: (getVal('issueDate') || localDateStr(now)).trim(),
@@ -1618,7 +1367,6 @@
         // ================= Generate =================
         let currentRaw = null;
         let currentBuilt = null;
-        let currentSvg = null;
         let liveMode = false;
         let regenTimer = null;
 
@@ -1626,18 +1374,15 @@
             const colsVal = getVal('barcodeColumns') || '6';
             const rowHVal = getVal('barcodeRowHeight') || '4';
             const bgMode = getVal('barcodeBg') || 'transparent';
-            const ecVal = getVal('barcodeEc') || '4';
 
             const parsedCols = parseInt(colsVal, 10);
             const parsedRowH = parseInt(rowHVal, 10);
-            const parsedEc = parseInt(ecVal, 10);
 
             const opts = {
                 bcid: 'pdf417',
                 scale: overrideScale || 3,
                 columns: (isNaN(parsedCols) || parsedCols < 1) ? 6 : parsedCols,
                 height: (isNaN(parsedRowH) || parsedRowH < 1) ? 4 : parsedRowH,
-                eclevel: (isNaN(parsedEc) || parsedEc < 0 || parsedEc > 8) ? 4 : parsedEc,
                 parse: false,
                 includetext: false
             };
@@ -1649,48 +1394,12 @@
             return opts;
         }
 
-        // ================== INTELLIGENT RENDERING ==================
-        // Renders a genuinely scannable PDF417. Preferred path: the
-        // /api/barcode endpoint (zxing-cpp encoder — the same decoder core
-        // used by real scanners). Fallback: bwip-js toSVG (verified scannable;
-        // its *canvas* output is known-broken, so we never use toCanvas).
-        function currentEcLevel() {
-            const v = parseInt(getVal('barcodeEc'), 10);
-            return (isNaN(v) || v < 0 || v > 8) ? 4 : v;
-        }
-
-        function renderBarcodeSVG(raw, ecLevel) {
-            // Try server-side zxing-cpp encoder first
-            return fetch('/api/barcode', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: raw, ecLevel: ecLevel })
-            }).then(res => {
-                if (!res.ok) throw new Error('server render failed: ' + res.status);
-                return res.text().then(txt => {
-                    if (!/^\s*<\?xml|^\s*<svg/i.test(txt)) throw new Error('invalid SVG response');
-                    return txt;
-                });
-            }).catch(() => {
-                // Fallback: bwip-js toSVG (scannable)
-                const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
-                if (!bwipEngine) throw new Error('no barcode engine available');
-                const opts = getBwipOpts();
-                opts.eclevel = ecLevel;
-                let svg = bwipEngine.toSVG(Object.assign({}, opts, { text: raw }));
-                if (typeof svg !== 'string') svg = svg.svg || String(svg);
-                return svg;
-            });
-        }
-
         function generateBarcode() {
             const canvas = document.getElementById('barcode-canvas');
-            const img = document.getElementById('barcode-img');
             const placeholder = document.getElementById('placeholder');
             const errorMsg = document.getElementById('errorMsg');
 
             if (errorMsg) errorMsg.classList.remove('show');
-            hideScanTestResult();
 
             const rawDl = getVal('licenseNumber').trim().toUpperCase();
             const dlNumber = rawDl.replace(/[\s\-]/g, '');
@@ -1717,38 +1426,22 @@
                 currentBuilt = built;
                 currentRaw = built.raw;
 
-                const genBtn = document.getElementById('generateBtn');
-                if (genBtn) { genBtn.disabled = true; genBtn.textContent = '⏳ Rendering…'; }
+                if (canvas) bwipEngine.toCanvas(canvas, Object.assign({}, getBwipOpts(), { text: built.raw }));
 
-                renderBarcodeSVG(built.raw, currentEcLevel()).then(svg => {
-                    currentSvg = svg;
-                    // Display as image (SVG is scannable; canvas output is not)
-                    if (img) {
-                        const blob = new Blob([svg], { type: 'image/svg+xml' });
-                        img.onload = () => {
-                            if (placeholder) placeholder.style.display = 'none';
-                            if (img) img.style.display = 'block';
-                            if (canvas) canvas.style.display = 'none';
-                            const dlBtns = document.getElementById('downloadBtns');
-                            if (dlBtns) dlBtns.style.display = 'flex';
-                            checkPaymentState();
-                            updateSpecStrip(built);
-                            updateRawPanel();
-                            updateVerifyPanel();
-                            liveMode = true;
-                            const lb = document.getElementById('liveBadge');
-                            if (lb) lb.style.display = 'inline-block';
-                        };
-                        img.src = URL.createObjectURL(blob);
-                    }
-                }).catch(err => {
-                    if (errorMsg) {
-                        errorMsg.textContent = '❌ Error: ' + err.message;
-                        errorMsg.classList.add('show');
-                    }
-                }).finally(() => {
-                    if (genBtn) { genBtn.disabled = false; genBtn.textContent = '⚡ Generate PDF417 Barcode'; }
-                });
+                if (placeholder) placeholder.style.display = 'none';
+                if (canvas) canvas.style.display = 'block';
+                const dlBtns = document.getElementById('downloadBtns');
+                if (dlBtns) dlBtns.style.display = 'flex';
+
+                checkPaymentState();
+
+                updateSpecStrip(built);
+                updateRawPanel();
+                updateVerifyPanel();
+
+                liveMode = true;
+                const lb = document.getElementById('liveBadge');
+                if (lb) lb.style.display = 'inline-block';
             } catch (e) {
                 console.error(e);
                 if (errorMsg) {
@@ -1756,110 +1449,6 @@
                     errorMsg.classList.add('show');
                 }
             }
-        }
-
-        // ================== SCAN TEST (independent verification) ==================
-        // Sends the rendered barcode image to /api/verify, which decodes it with
-        // zxing-cpp — the same decoder core used by real-world scanners. If the
-        // scan fails, automatically retries with higher error correction / wider
-        // layout until it passes (auto-repair).
-        function showScanTestResult(cls, html) {
-            const el = document.getElementById('scanTestResult');
-            if (!el) return;
-            el.className = 'scan-test-result ' + cls;
-            el.innerHTML = html;
-            el.style.display = 'block';
-        }
-        function hideScanTestResult() {
-            const el = document.getElementById('scanTestResult');
-            if (el) { el.style.display = 'none'; el.className = 'scan-test-result'; }
-        }
-
-        function renderBarcodePNGDataURL(svg) {
-            // Render the SVG to an offscreen canvas and return PNG dataURL
-            return new Promise((resolve, reject) => {
-                const blob = new Blob([svg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                const image = new Image();
-                image.onload = () => {
-                    const canvas2 = document.createElement('canvas');
-                    // 3x scale for reliable decode
-                    canvas2.width = image.naturalWidth * 3;
-                    canvas2.height = image.naturalHeight * 3;
-                    const ctx = canvas2.getContext('2d');
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas2.width, canvas2.height);
-                    ctx.drawImage(image, 0, 0, canvas2.width, canvas2.height);
-                    URL.revokeObjectURL(url);
-                    resolve(canvas2.toDataURL('image/png'));
-                };
-                image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
-                image.src = url;
-            });
-        }
-
-        function runScanTest() {
-            if (!currentRaw || !currentSvg) {
-                showScanTestResult('fail', '❌ Generate a barcode first, then run the scan test.');
-                return;
-            }
-            const btn = document.getElementById('scanTestBtn');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ Scanning…'; }
-            showScanTestResult('wait', '📡 Sending barcode to independent scanner-grade decoder (zxing-cpp)…');
-
-            renderBarcodePNGDataURL(currentSvg).then(pngDataUrl => {
-                return fetch('/api/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: pngDataUrl, expected: currentRaw })
-                }).then(r => r.json()).then(data => ({ data, pngDataUrl }));
-            }).then(({ data, pngDataUrl }) => {
-                if (data && data.ok) {
-                    const match = data.match;
-                    const ec = data.ecLevel || '?';
-                    if (match) {
-                        showScanTestResult('pass',
-                            '✅ <strong>SCAN TEST PASSED</strong> — an independent decoder read your barcode and the payload matches exactly.<br>' +
-                            '<span class="mono">' + escapeHtml(String(data.decoded).slice(0, 90)) + '…</span><br>' +
-                            'Length: ' + data.length + ' chars · EC level: ' + escapeHtml(String(ec)) + ' · Format: ' + escapeHtml(data.format));
-                    } else {
-                        showScanTestResult('fail',
-                            '⚠️ <strong>SCAN TEST PARTIAL</strong> — decoder read a barcode but payload differs. Re-generating with higher error correction…');
-                        autoRepairBarcode();
-                    }
-                } else {
-                    // Scan failed — auto-repair
-                    showScanTestResult('fail',
-                        '❌ <strong>SCAN TEST FAILED</strong> — ' + escapeHtml((data && data.error) || 'no decoder response') +
-                        '<br>🛠️ Auto-repairing: increasing error correction / adjusting layout…');
-                    autoRepairBarcode();
-                }
-            }).catch(err => {
-                showScanTestResult('fail',
-                    '❌ <strong>SCAN TEST ERROR</strong> — ' + escapeHtml(err.message) +
-                    '<br><span class="mono">Check that /api/verify is deployed (Vercel).</span>');
-            }).finally(() => {
-                if (btn) { btn.disabled = false; btn.textContent = '📡 Run Scan Test'; }
-            });
-        }
-
-        function autoRepairBarcode() {
-            // Try to make the barcode scannable: increase EC, widen columns, retry up to 3 times
-            const ecSelect = document.getElementById('barcodeEc');
-            const colsSelect = document.getElementById('barcodeColumns');
-            const attempts = [1, 2, 3].map(i => ({ ec: [4, 6, 8][Math.min(i, 2)], cols: [6, 8, 10][Math.min(i, 2)] }));
-
-            // First try bumping EC only
-            const currentEc = currentEcLevel();
-            const nextEc = currentEc < 8 ? currentEc + 2 : 8;
-            if (ecSelect) ecSelect.value = String(nextEc);
-            generateBarcode();
-            // Note: real verification happens on next scan test. The render itself
-            // via zxing-cpp is scannable by construction; bwip-js SVG fallback is
-            // verified scannable for cols >= 6 and EC <= 4.
-            showScanTestResult('wait',
-                '🛠️ <strong>AUTO-REPAIR</strong> — regenerating with EC level ' + nextEc +
-                ' (wider layout if needed). Run Scan Test again to confirm.');
         }
 
         function scheduleRegen() {
@@ -1891,8 +1480,7 @@
             const specNote = document.getElementById('specNote');
             if (specNote) specNote.innerHTML = 'Version <strong>' + v + '</strong> (' + year +
                 ') payload — single <strong>' + des + '</strong> subfile, ' +
-                count + ' elements, offset ' + des0.offset + ', length ' + des0.length + '. ' +
-                'EC level <strong>' + currentEcLevel() + '</strong>.';
+                count + ' elements, offset ' + des0.offset + ', length ' + des0.length + '.';
         }
 
         // ================= Raw data panel =================
@@ -2089,50 +1677,26 @@
             if (!currentRaw) return;
             const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
             if (!bwipEngine) return;
-            // Render from the scannable SVG (never from the broken canvas path)
-            if (currentSvg) {
-                renderBarcodePNGDataURL(currentSvg).then(dataUrl => {
-                    const l = document.createElement('a');
-                    l.download = 'CICIOXPDF417-' + getVal('state', 'WA') + '.png';
-                    l.href = dataUrl;
-                    l.click();
-                }).catch(() => fallbackPNGDownload());
-            } else {
-                fallbackPNGDownload();
-            }
-        }
-
-        function fallbackPNGDownload() {
-            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
-            if (!bwipEngine || !currentRaw) return;
-            // Fallback: render via toSVG then rasterize (scannable), never toCanvas
-            try {
-                let svg = bwipEngine.toSVG(Object.assign({}, getBwipOpts(), { text: currentRaw }));
-                if (typeof svg !== 'string') svg = svg.svg || String(svg);
-                renderBarcodePNGDataURL(svg).then(dataUrl => {
-                    const l = document.createElement('a');
-                    l.download = 'CICIOXPDF417-' + getVal('state', 'WA') + '.png';
-                    l.href = dataUrl;
-                    l.click();
-                });
-            } catch (e) {
-                console.error('PNG fallback failed', e);
-            }
+            const scale = parseInt(getVal('exportScale') || '6', 10);
+            const hi = document.createElement('canvas');
+            bwipEngine.toCanvas(hi, Object.assign({}, getBwipOpts(scale), { text: currentRaw }));
+            const l = document.createElement('a');
+            l.download = 'CICIOXPDF417-' + getVal('state', 'WA') + '.png';
+            l.href = hi.toDataURL('image/png');
+            l.click();
         }
 
         function downloadSVG() {
             if (!currentRaw) return;
-            let svg = currentSvg;
-            if (!svg) {
-                const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
-                if (!bwipEngine) return;
-                try {
-                    svg = bwipEngine.toSVG(Object.assign({}, getBwipOpts(), { text: currentRaw }));
-                    if (typeof svg !== 'string') svg = svg.svg || String(svg);
-                } catch (e) {
-                    console.error('SVG export failed', e);
-                    return;
-                }
+            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+            if (!bwipEngine) return;
+            let svg;
+            try {
+                svg = bwipEngine.toSVG(Object.assign({}, getBwipOpts(), { text: currentRaw }));
+                if (typeof svg !== 'string') svg = svg.svg || String(svg);
+            } catch (e) {
+                const c = document.getElementById('barcode-canvas');
+                svg = '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="' + (c ? c.width : 300) + '" height="' + (c ? c.height : 100) + '"><image href="' + (c ? c.toDataURL() : '') + '"/></svg>';
             }
             const b = new Blob([svg], { type: 'image/svg+xml' });
             const l = document.createElement('a');
@@ -2149,8 +1713,17 @@
             btn.classList.add('active');
         }
 
+        function setTheme(name) {
+            document.body.className = (name === 'default' || !name) ? '' : 'theme-' + name;
+            safeSetStorage('ciciox_theme', name);
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('thm-' + name);
+            if (btn) btn.classList.add('active');
+        }
+
         // ================= Init =================
         window.onload = function () {
+            setTheme(safeGetStorage('ciciox_theme') || 'default');
             checkPaymentState();
             fetchAppConfig();
 

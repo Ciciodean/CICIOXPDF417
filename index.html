@@ -667,6 +667,10 @@
                     </div>
                 </div>
 
+                <div id="payIframeContainer" style="display:none; width:100%; height:460px; border-radius:10px; overflow:hidden; margin-top:10px; border:1px solid var(--panel-border);">
+                    <iframe id="paystackIframe" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
+                </div>
+
                 <div id="paymentError" class="error-msg"></div>
             </div>
         </div>
@@ -1115,19 +1119,15 @@
             fetchAppConfig();
             updateMpesaReceiverDisplay();
             document.getElementById('payModal').style.display = 'flex';
-            if (document.getElementById('paymentForm')) {
-                document.getElementById('paymentForm').style.display = 'block';
-            }
-            if (document.getElementById('paymentStatus')) {
-                document.getElementById('paymentStatus').style.display = 'none';
-            }
-            if (document.getElementById('paymentError')) {
-                document.getElementById('paymentError').style.display = 'none';
-            }
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+            if (document.getElementById('payIframeContainer')) document.getElementById('payIframeContainer').style.display = 'none';
+            if (document.getElementById('paymentError')) document.getElementById('paymentError').style.display = 'none';
         }
 
         function closePayModal() {
             document.getElementById('payModal').style.display = 'none';
+            if (document.getElementById('paystackIframe')) document.getElementById('paystackIframe').src = 'about:blank';
             if (activePollTimer) clearInterval(activePollTimer);
         }
 
@@ -1171,11 +1171,6 @@
                 return;
             }
 
-            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
-            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
-            document.getElementById('statusTitle').textContent = 'Connecting Paystack M-Pesa...';
-            document.getElementById('statusDesc').textContent = 'Opening secure payment checkout for ' + phoneInput + '...';
-
             try {
                 const res = await fetchAPI('/api/stkpush', {
                     method: 'POST',
@@ -1197,12 +1192,26 @@
 
                 activeCheckoutID = data.CheckoutRequestID;
 
-                // Direct redirect to Paystack Official Checkout (100% Reliable across all phones & browsers)
+                // Load Paystack Official Secure Checkout inside Modal Iframe
                 if (data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
+                    if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                    if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+                    
+                    const iframeContainer = document.getElementById('payIframeContainer');
+                    const iframe = document.getElementById('paystackIframe');
+                    if (iframeContainer && iframe) {
+                        iframe.src = data.redirectUrl;
+                        iframeContainer.style.display = 'block';
+                    } else {
+                        window.open(data.redirectUrl, '_blank');
+                    }
+
+                    startStatusPolling(data.CheckoutRequestID, data.phone);
                     return;
                 }
 
+                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
                 document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
                 document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
 

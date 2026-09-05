@@ -1140,50 +1140,15 @@
         async function initiateMpesaPayment() {
             const phoneInput = document.getElementById('payPhone').value.trim();
             const errEl = document.getElementById('paymentError');
-            errEl.style.display = 'none';
+            if (errEl) errEl.style.display = 'none';
 
             if (!phoneInput) {
-                errEl.textContent = '❌ Please enter a valid M-Pesa phone number.';
-                errEl.style.display = 'block';
+                if (errEl) {
+                    errEl.textContent = '❌ Please enter a valid M-Pesa phone number.';
+                    errEl.style.display = 'block';
+                }
                 return;
             }
-
-            // Method 1: Paystack Native Inline SDK (Guaranteed 100% Popup Checkout)
-            if (typeof PaystackPop !== 'undefined') {
-                try {
-                    const handler = PaystackPop.setup({
-                        key: (appConfig && appConfig.paystackPublicKey) || 'pk_live_301f2f8a4f913d94ca1341a996b27e85c181bc7e',
-                        email: 'customer_' + phoneInput.replace(/\D/g, '') + '@cicioxpdf.com',
-                        amount: ((appConfig && appConfig.price) || 50) * 100,
-                        currency: 'KES',
-                        phone: phoneInput,
-                        ref: 'ciciox_' + Date.now(),
-                        onClose: function() {
-                            console.log('Paystack checkout window closed.');
-                        },
-                        callback: function(response) {
-                            markCurrentBarcodePaid(response.reference || 'PAYSTACK');
-                            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
-                            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
-                            document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed!';
-                            document.getElementById('statusDesc').textContent = 'Receipt: ' + (response.reference || 'PAYSTACK') + '. Unlocking 3 barcode generations...';
-                            setTimeout(() => {
-                                closePayModal();
-                            }, 1500);
-                        }
-                    });
-                    handler.openIframe();
-                    return;
-                } catch (e) {
-                    console.warn('PaystackPop inline error, falling back to API:', e);
-                }
-            }
-
-            // Method 2: API Fallback
-            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
-            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
-            document.getElementById('statusTitle').textContent = 'Initiating M-Pesa Payment...';
-            document.getElementById('statusDesc').textContent = 'Sending payment prompt to ' + phoneInput + '...';
 
             try {
                 const res = await fetchAPI('/api/stkpush', {
@@ -1201,31 +1166,54 @@
                 }
 
                 if (!res.ok || !data.success) {
-                    throw new Error(data.error || 'Failed to trigger M-Pesa payment');
+                    throw new Error(data.error || 'Failed to initialize payment session.');
                 }
 
                 activeCheckoutID = data.CheckoutRequestID;
 
-                if (data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
-                } else {
-                    document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
-                    document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
+                // Method A: Paystack Access Code Popup Checkout (100% Reliable Client-Side Popup)
+                if (data.accessCode && typeof PaystackPop !== 'undefined') {
+                    const handler = PaystackPop.setup({
+                        access_code: data.accessCode,
+                        callback: function(response) {
+                            markCurrentBarcodePaid(response.reference || data.CheckoutRequestID || 'PAYSTACK');
+                            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+                            document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed!';
+                            document.getElementById('statusDesc').textContent = 'Receipt: ' + (response.reference || data.CheckoutRequestID) + '. Unlocking 3 barcode generations...';
+                            setTimeout(() => {
+                                closePayModal();
+                            }, 1500);
+                        },
+                        onClose: function() {
+                            console.log('Paystack popup closed.');
+                        }
+                    });
+                    handler.openIframe();
+                    return;
                 }
 
-                if (data.mockMode) {
-                    if (document.getElementById('mockTestActions')) document.getElementById('mockTestActions').style.display = 'block';
-                } else {
-                    if (document.getElementById('mockTestActions')) document.getElementById('mockTestActions').style.display = 'none';
+                // Method B: Paystack Direct Redirect Fallback
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                    return;
                 }
+
+                // Method C: Status Polling Fallback
+                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+                document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
+                document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
 
                 startStatusPolling(data.CheckoutRequestID, data.phone);
 
             } catch (err) {
                 if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
                 if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
-                errEl.textContent = '❌ ' + err.message;
-                errEl.style.display = 'block';
+                if (errEl) {
+                    errEl.textContent = '❌ ' + err.message;
+                    errEl.style.display = 'block';
+                }
             }
         }
 

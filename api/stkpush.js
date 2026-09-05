@@ -42,7 +42,9 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY environment variable is missing.' });
     }
 
-    // Paystack Official Transaction Initialize API (Guaranteed 100% Success on all Paystack Kenya Accounts)
+    const origin = req.headers.referer || req.headers.origin || 'https://cicioxpdf-417.vercel.app/';
+
+    // Paystack Official Transaction Initialize API
     const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -53,6 +55,7 @@ module.exports = async (req, res) => {
         email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
         amount: amountInCents,
         currency: 'KES',
+        callback_url: origin,
         channels: ['mobile_money', 'card']
       })
     });

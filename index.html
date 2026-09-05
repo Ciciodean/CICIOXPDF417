@@ -722,7 +722,6 @@
 
             if (!getVal('lastName')) setVal('lastName', 'DOE');
             if (!getVal('firstName')) setVal('firstName', 'JANE');
-            if (!getVal('middleName')) setVal('middleName', 'QUINN');
 
             regenDD();
             updateDLFormat();
@@ -1101,7 +1100,7 @@
                 docType: getVal('docType') || 'DL',
                 lastName: (getVal('lastName') || 'DOE').trim(),
                 firstName: (getVal('firstName') || 'JANE').trim(),
-                middleName: (getVal('middleName') || 'QUINN').trim(),
+                middleName: getVal('middleName').trim(),
                 suffix: getVal('suffix').trim(),
                 dob: (getVal('dob') || '1995-05-15').trim(),
                 issueDate: (getVal('issueDate') || localDateStr(now)).trim(),

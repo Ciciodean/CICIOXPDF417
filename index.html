@@ -1092,15 +1092,18 @@
         }
 
         function openPayModal() {
-            if (appConfig.price <= 0) {
-                alert('🎁 Free Test Mode is active! All barcodes, PNG/SVG exports, and raw data are fully unlocked for testing.');
-                return;
-            }
             fetchAppConfig();
             updateMpesaReceiverDisplay();
             document.getElementById('payModal').style.display = 'flex';
-            document.getElementById('paymentStatus').style.display = 'none';
-            document.getElementById('paymentError').style.display = 'none';
+            if (document.getElementById('paymentForm')) {
+                document.getElementById('paymentForm').style.display = 'block';
+            }
+            if (document.getElementById('paymentStatus')) {
+                document.getElementById('paymentStatus').style.display = 'none';
+            }
+            if (document.getElementById('paymentError')) {
+                document.getElementById('paymentError').style.display = 'none';
+            }
         }
 
         function closePayModal() {

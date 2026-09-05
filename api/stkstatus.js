@@ -34,12 +34,12 @@ module.exports = async (req, res) => {
     }
 
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
-    const intasendKey = process.env.INTASEND_PUBLISHABLE_KEY;
 
-    // Provider 1: Paystack Status Verification
-    if (paystackKey && (body.provider === 'paystack' || checkoutID.startsWith('ciciox_') || checkoutID.startsWith('ps_'))) {
+    // Provider 1: Paystack Charge Verification
+    if (paystackKey) {
       try {
-        const paystackRes = await fetch(`https://api.paystack.co/charge/${checkoutID}`, {
+        // Query 1: Charge endpoint
+        let paystackRes = await fetch(`https://api.paystack.co/charge/${checkoutID}`, {
           method: 'GET',
           headers: {
             'Authorization': 'Bearer ' + paystackKey,
@@ -47,22 +47,43 @@ module.exports = async (req, res) => {
           }
         });
 
-        const paystackData = await paystackRes.json().catch(() => null);
+        let paystackData = await paystackRes.json().catch(() => null);
+
+        // Query 2: Transaction verify endpoint fallback
+        if (!paystackData || !paystackData.data) {
+          paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${checkoutID}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + paystackKey,
+              'Content-Type': 'application/json'
+            }
+          });
+          paystackData = await paystackRes.json().catch(() => null);
+        }
 
         if (paystackData && paystackData.data) {
           const status = (paystackData.data.status || '').toLowerCase();
-          if (status === 'success') {
+          const gatewayMsg = paystackData.data.gateway_response || paystackData.data.message || '';
+
+          if (status === 'success' || status === 'completed') {
+            const receipt = paystackData.data.reference || paystackData.data.receipt_number || checkoutID;
             const token = generateAccessToken(checkoutID, body.phone || '254700000000');
             return res.status(200).json({
               status: 'COMPLETED',
               message: 'Payment confirmed via Paystack M-Pesa',
-              receipt: paystackData.data.reference || checkoutID,
+              receipt: receipt,
               token: token
             });
           } else if (status === 'failed') {
-            return res.status(200).json({ status: 'FAILED', message: 'Paystack payment failed or declined' });
+            return res.status(200).json({
+              status: 'FAILED',
+              message: gatewayMsg || 'M-Pesa PIN prompt timed out or was cancelled on mobile phone.'
+            });
           } else {
-            return res.status(200).json({ status: 'PENDING', message: 'Waiting for M-Pesa PIN entry on phone...' });
+            return res.status(200).json({
+              status: 'PENDING',
+              message: 'Waiting for M-Pesa PIN entry on phone...'
+            });
           }
         }
       } catch (err) {
@@ -70,49 +91,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Provider 2: IntaSend Status
-    if (intasendKey && (body.provider === 'intasend' || checkoutID.length > 20)) {
-      try {
-        const env = process.env.INTASEND_ENV || process.env.MPESA_ENV || 'live';
-        const isLiveKey = intasendKey.startsWith('ISPubKey_live_') || env === 'live' || env === 'production';
-        const intasendBase = isLiveKey ? 'https://payment.intasend.com' : 'https://sandbox.intasend.com';
-
-        const intasendRes = await fetch(`${intasendBase}/api/v1/payment/status/`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${intasendKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ invoice_id: checkoutID })
-        });
-
-        const intasendData = await intasendRes.json().catch(() => null);
-
-        if (intasendData && intasendData.invoice) {
-          const state = (intasendData.invoice.state || '').toUpperCase();
-          if (state === 'COMPLETE' || state === 'PROCESSING' || state === 'SUCCESS') {
-            const receipt = intasendData.invoice.mpesa_reference || intasendData.invoice.invoice_id;
-            const token = generateAccessToken(checkoutID, body.phone || '254700000000');
-            return res.status(200).json({
-              status: 'COMPLETED',
-              message: 'Payment received via IntaSend',
-              receipt: receipt,
-              token: token
-            });
-          } else if (state === 'FAILED') {
-            return res.status(200).json({ status: 'FAILED', message: 'Payment failed' });
-          } else if (state === 'CANCELLED') {
-            return res.status(200).json({ status: 'CANCELLED', message: 'Payment cancelled' });
-          } else {
-            return res.status(200).json({ status: 'PENDING', message: 'Waiting for PIN entry' });
-          }
-        }
-      } catch (err) {
-        console.warn('IntaSend status query error:', err);
-      }
-    }
-
-    // Test / Fallback Status
+    // Provider 2: Test / Fallback Status
     const timestampPart = checkoutID.split('_')[3];
     const startTime = timestampPart ? parseInt(timestampPart, 10) : Date.now() - 5000;
     const elapsed = Date.now() - startTime;

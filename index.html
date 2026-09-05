@@ -1229,29 +1229,16 @@
                             closePayModal();
                         }, 1200);
                         return;
-                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
+                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'TIMEOUT') {
                         clearInterval(activePollTimer);
                         document.getElementById('paymentStatus').style.display = 'none';
-                        document.getElementById('paymentForm').style.display = 'block';
+                        if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
                         const errEl = document.getElementById('paymentError');
-                        errEl.textContent = '❌ ' + (data.message || 'Payment prompt timed out or was declined on mobile phone. Please try again.');
-                        errEl.style.display = 'block';
+                        if (errEl) {
+                            errEl.textContent = '❌ ' + (data.message || 'Payment prompt timed out or was declined on mobile phone. Please try again.');
+                            errEl.style.display = 'block';
+                        }
                         return;
-                    }
-                    } else if (data.status === 'CANCELLED') {
-                        clearInterval(activePollTimer);
-                        document.getElementById('paymentStatus').style.display = 'none';
-                        document.getElementById('paymentForm').style.display = 'block';
-                        const errEl = document.getElementById('paymentError');
-                        errEl.textContent = '❌ Payment was cancelled on the phone.';
-                        errEl.style.display = 'block';
-                    } else if (data.status === 'TIMEOUT') {
-                        clearInterval(activePollTimer);
-                        document.getElementById('paymentStatus').style.display = 'none';
-                        document.getElementById('paymentForm').style.display = 'block';
-                        const errEl = document.getElementById('paymentError');
-                        errEl.textContent = '⏱️ Payment timed out. M-Pesa PIN was not entered.';
-                        errEl.style.display = 'block';
                     }
                 } catch (e) {
                     console.warn('Poll status error:', e);

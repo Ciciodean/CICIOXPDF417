@@ -599,42 +599,44 @@
                     <div class="price-sub">Unlocks 3 individual barcode generations (PNG, SVG & raw payload)</div>
                 </div>
 
-                <!-- Payment Method Tabs -->
-                <div style="display:flex; gap:8px; margin-bottom:15px;">
-                    <button id="tabBtnStk" class="pay-tab active" onclick="switchPayTab('stk')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:var(--accent-color); color:#fff; border:none;">📲 Automated STK Push (IntaSend)</button>
-                    <button id="tabBtnCode" class="pay-tab" onclick="switchPayTab('code')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid var(--panel-border);">✉️ Enter M-Pesa Code</button>
-                </div>
-
-                <!-- Method B: IntaSend STK Push (Default) -->
-                <div id="payModeStk">
-                    <div class="field" style="margin-bottom:15px;">
-                        <label>M-Pesa Phone Number</label>
-                        <input type="tel" id="payPhone" placeholder="0712345678 or 254712345678" maxlength="15">
-                        <div class="hint" id="phoneHint">Kenyan M-Pesa mobile line (07XX XXX XXX / 01XX XXX XXX)</div>
+                <div id="paymentForm">
+                    <!-- Payment Method Tabs -->
+                    <div style="display:flex; gap:8px; margin-bottom:15px;">
+                        <button id="tabBtnStk" class="pay-tab active" onclick="switchPayTab('stk')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:var(--accent-color); color:#fff; border:none;">📲 Automated STK Push (Paystack)</button>
+                        <button id="tabBtnCode" class="pay-tab" onclick="switchPayTab('code')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid var(--panel-border);">✉️ Enter M-Pesa Code</button>
                     </div>
-                    <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
-                        📲 Pay <span class="btnPriceLabel">KES 50</span> via M-Pesa STK Push
-                    </button>
-                </div>
 
-                <!-- Method A: Direct M-Pesa Code -->
-                <div id="payModeCode" style="display:none;">
-                    <div style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); padding:12px; border-radius:8px; margin-bottom:15px; font-size:0.88rem;">
-                        <div style="color:var(--text-muted); margin-bottom:4px;">1. Send <strong>KES 50</strong> via M-Pesa:</div>
-                        <div style="font-size:1.1rem; font-weight:700; color:#3fb950; display:flex; align-items:center; justify-content:space-between; margin:6px 0;">
-                            <span id="mpesaNumberDisplay">M-Pesa: 0795852494</span>
-                            <button onclick="adminAddMpesaCode()" style="font-size:0.75rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:2px 8px; border-radius:12px; cursor:pointer;">🔑 Approve Code</button>
+                    <!-- Method B: Paystack STK Push (Default) -->
+                    <div id="payModeStk">
+                        <div class="field" style="margin-bottom:15px;">
+                            <label>M-Pesa Phone Number</label>
+                            <input type="tel" id="payPhone" placeholder="0712345678 or 254712345678" maxlength="15">
+                            <div class="hint" id="phoneHint">Kenyan M-Pesa mobile line (07XX XXX XXX / 01XX XXX XXX)</div>
                         </div>
-                        <div style="color:var(--text-muted); margin-top:8px;">2. Paste your 10-character M-Pesa SMS Code below:</div>
+                        <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
+                            📲 Pay <span class="btnPriceLabel">KES 50</span> via M-Pesa STK Push
+                        </button>
                     </div>
-                    <div class="field" style="margin-bottom:15px;">
-                        <label>M-Pesa Confirmation Code</label>
-                        <input type="text" id="mpesaCodeInput" placeholder="e.g. SJK1234567" maxlength="10" style="text-transform:uppercase; font-family:monospace; font-size:1.1rem; letter-spacing:1px;">
-                        <div class="hint">Enter 10-character code from your M-Pesa SMS (e.g. SJK1234567)</div>
+
+                    <!-- Method A: Direct M-Pesa Code -->
+                    <div id="payModeCode" style="display:none;">
+                        <div style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); padding:12px; border-radius:8px; margin-bottom:15px; font-size:0.88rem;">
+                            <div style="color:var(--text-muted); margin-bottom:4px;">1. Send <strong>KES 50</strong> via M-Pesa:</div>
+                            <div style="font-size:1.1rem; font-weight:700; color:#3fb950; display:flex; align-items:center; justify-content:space-between; margin:6px 0;">
+                                <span id="mpesaNumberDisplay">M-Pesa: 0795852494</span>
+                                <button onclick="adminAddMpesaCode()" style="font-size:0.75rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:2px 8px; border-radius:12px; cursor:pointer;">🔑 Approve Code</button>
+                            </div>
+                            <div style="color:var(--text-muted); margin-top:8px;">2. Paste your 10-character M-Pesa SMS Code below:</div>
+                        </div>
+                        <div class="field" style="margin-bottom:15px;">
+                            <label>M-Pesa Confirmation Code</label>
+                            <input type="text" id="mpesaCodeInput" placeholder="e.g. SJK1234567" maxlength="10" style="text-transform:uppercase; font-family:monospace; font-size:1.1rem; letter-spacing:1px;">
+                            <div class="hint">Enter 10-character code from your M-Pesa SMS (e.g. SJK1234567)</div>
+                        </div>
+                        <button class="btn mpesa-btn" onclick="verifyMpesaCode()">
+                            ✅ Verify Code &amp; Unlock 3 Barcodes
+                        </button>
                     </div>
-                    <button class="btn mpesa-btn" onclick="verifyMpesaCode()">
-                        ✅ Verify Code &amp; Unlock 3 Barcodes
-                    </button>
                 </div>
 
                 <div id="paymentStatus" class="status-box" style="display:none;">

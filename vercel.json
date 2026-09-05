@@ -9,19 +9,5 @@
         { "key": "Expires", "value": "0" }
       ]
     }
-  ],
-  "builds": [
-    { "src": "api/*.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "js/**", "use": "@vercel/static" },
-    { "src": "SETUP-MPESA.md", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/config", "dest": "/api/config.js" },
-    { "src": "/api/stkpush", "dest": "/api/stkpush.js" },
-    { "src": "/api/stkstatus", "dest": "/api/stkstatus.js" },
-    { "src": "/api/callback", "dest": "/api/callback.js" },
-    { "src": "/api/verify-code", "dest": "/api/verify-code.js" },
-    { "src": "/(.*)", "dest": "/$1" }
   ]
 }

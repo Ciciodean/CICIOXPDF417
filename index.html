@@ -1206,17 +1206,25 @@
         function startStatusPolling(checkoutID, phone) {
             if (activePollTimer) clearInterval(activePollTimer);
             let attempts = 0;
-            const maxAttempts = 30;
+            const maxAttempts = 120; // Poll continuously for 5 minutes
 
             activePollTimer = setInterval(async () => {
                 attempts++;
+
+                const descEl = document.getElementById('statusDesc');
+                if (descEl && attempts > 1) {
+                    descEl.textContent = '⌛ Waiting for M-Pesa PIN entry on ' + phone + '... (Checking payment status...)';
+                }
+
                 if (attempts > maxAttempts) {
                     clearInterval(activePollTimer);
                     document.getElementById('paymentStatus').style.display = 'none';
-                    document.getElementById('paymentForm').style.display = 'block';
+                    if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
                     const errEl = document.getElementById('paymentError');
-                    errEl.textContent = '⏱️ Payment timed out. Did not receive confirmation in time.';
-                    errEl.style.display = 'block';
+                    if (errEl) {
+                        errEl.textContent = '⏱️ Payment timed out after 5 minutes. Did not receive PIN confirmation.';
+                        errEl.style.display = 'block';
+                    }
                     return;
                 }
 
@@ -1235,13 +1243,13 @@
                         markCurrentBarcodePaid(data.receipt || 'M-PESA');
                         
                         document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed!';
-                        document.getElementById('statusDesc').textContent = 'Receipt: ' + (data.receipt || 'M-PESA') + '. Unlocking barcode downloads...';
+                        document.getElementById('statusDesc').textContent = 'Receipt: ' + (data.receipt || 'M-PESA') + '. Unlocking 3 barcode generations...';
                         
                         setTimeout(() => {
                             closePayModal();
-                        }, 1200);
+                        }, 1500);
                         return;
-                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'TIMEOUT') {
+                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
                         clearInterval(activePollTimer);
                         document.getElementById('paymentStatus').style.display = 'none';
                         if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
@@ -1252,8 +1260,8 @@
                         }
                         return;
                     }
-                } catch (e) {
-                    console.warn('Poll status error:', e);
+                } catch (err) {
+                    console.warn('Polling status error:', err);
                 }
             }, 2500);
         }

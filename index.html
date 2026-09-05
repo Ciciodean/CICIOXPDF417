@@ -1204,6 +1204,16 @@
                         setTimeout(() => {
                             closePayModal();
                         }, 1200);
+                        return;
+                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
+                        clearInterval(activePollTimer);
+                        document.getElementById('paymentStatus').style.display = 'none';
+                        document.getElementById('paymentForm').style.display = 'block';
+                        const errEl = document.getElementById('paymentError');
+                        errEl.textContent = '❌ ' + (data.message || 'Payment prompt timed out or was declined on mobile phone. Please try again.');
+                        errEl.style.display = 'block';
+                        return;
+                    }
                     } else if (data.status === 'CANCELLED') {
                         clearInterval(activePollTimer);
                         document.getElementById('paymentStatus').style.display = 'none';

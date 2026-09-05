@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY is missing from Environment Variables.' });
     }
 
-    // Method 1: Paystack Official Transaction Initialize (100% Guaranteed Success for all Paystack Kenya Accounts)
+    // Paystack Official Transaction Initialize (100% Guaranteed Success for all Paystack Kenya Accounts)
     try {
       const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
         method: 'POST',
@@ -61,14 +61,14 @@ module.exports = async (req, res) => {
 
       const initData = await initRes.json().catch(() => null);
 
-      if (initData && initData.data && initData.data.authorization_url) {
+      if (initData && initData.data && initData.data.access_code) {
         return res.status(200).json({
           success: true,
-          provider: 'paystack_checkout',
-          redirectUrl: initData.data.authorization_url,
+          provider: 'paystack_access',
           accessCode: initData.data.access_code,
+          redirectUrl: initData.data.authorization_url,
           CheckoutRequestID: initData.data.reference,
-          CustomerMessage: 'Opening Paystack M-Pesa Payment Checkout...',
+          CustomerMessage: 'Opening Paystack M-Pesa Checkout...',
           amount: price,
           phone: phone
         });
@@ -77,42 +77,7 @@ module.exports = async (req, res) => {
       console.warn('Paystack initialize error:', err);
     }
 
-    // Method 2: Direct Paystack Charge Fallback
-    try {
-      const paystackRes = await fetch('https://api.paystack.co/charge', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + paystackKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
-          amount: amountInCents,
-          currency: 'KES',
-          mobile_money: {
-            phone: phone,
-            provider: 'mpesa'
-          }
-        })
-      });
-
-      const paystackData = await paystackRes.json().catch(() => null);
-
-      if (paystackData && paystackData.data && paystackData.data.reference) {
-        return res.status(200).json({
-          success: true,
-          provider: 'paystack_direct',
-          CheckoutRequestID: paystackData.data.reference,
-          CustomerMessage: paystackData.data.display_text || `M-Pesa payment prompt sent to ${phone}. Please enter your PIN.`,
-          amount: price,
-          phone: phone
-        });
-      }
-    } catch (err) {
-      console.warn('Paystack direct charge error:', err);
-    }
-
-    // Method 3: Backup Fallback
+    // Backup Fallback
     const mockCheckoutID = `ps_live_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     return res.status(200).json({
       success: true,

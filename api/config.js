@@ -7,7 +7,8 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const price = parseInt(process.env.MPESA_PRICE_KES || '50', 10);
+  const rawPrice = process.env.MPESA_PRICE_KES ? String(process.env.MPESA_PRICE_KES).trim() : '50';
+  const price = parseInt(rawPrice, 10) || 50;
   const mockMode = process.env.MOCK_MODE === 'true';
 
   res.status(200).json({
@@ -15,6 +16,6 @@ module.exports = async (req, res) => {
     currency: 'KES',
     mockMode: mockMode,
     shortcode: process.env.MPESA_SHORTCODE || '174379',
-    environment: process.env.MPESA_ENV || 'sandbox'
+    environment: process.env.MPESA_ENV || 'live'
   });
 };

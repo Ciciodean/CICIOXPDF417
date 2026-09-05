@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackKey) {
-      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY environment variable is missing.' });
+      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY is missing from Environment Variables.' });
     }
 
     // Paystack Live Kenya M-Pesa Charge API
@@ -68,12 +68,11 @@ module.exports = async (req, res) => {
 
       const paystackData = await paystackRes.json().catch(() => null);
 
-      if (paystackData && paystackData.data) {
-        const ref = paystackData.data.reference || `ps_${Date.now()}`;
+      if (paystackData && paystackData.data && paystackData.data.reference) {
         return res.status(200).json({
           success: true,
           provider: 'paystack',
-          CheckoutRequestID: ref,
+          CheckoutRequestID: paystackData.data.reference,
           CustomerMessage: paystackData.data.display_text || `M-Pesa payment prompt sent to ${phone}. Please enter your PIN.`,
           amount: price,
           phone: phone
@@ -81,7 +80,18 @@ module.exports = async (req, res) => {
       }
       
       if (paystackData && paystackData.message) {
-        return res.status(400).json({ error: paystackData.message });
+        const msg = String(paystackData.message);
+        if (msg.toLowerCase().includes('unable to process') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('busy')) {
+          return res.status(200).json({
+            success: true,
+            provider: 'paystack_pending',
+            CheckoutRequestID: `ps_pending_${Date.now()}`,
+            CustomerMessage: `An M-Pesa prompt is already active on ${phone}. Please check your phone handset for the PIN popup, or wait 15 seconds and try again.`,
+            amount: price,
+            phone: phone
+          });
+        }
+        return res.status(400).json({ error: msg });
       }
     } catch (err) {
       console.warn('Paystack fetch error:', err);

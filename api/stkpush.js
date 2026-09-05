@@ -38,11 +38,13 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone number. Use a Kenyan M-Pesa number (e.g. 0795852494 or +254795852494).' });
     }
 
-    const price = parseInt(process.env.MPESA_PRICE_KES || '50', 10);
+    const rawPrice = process.env.MPESA_PRICE_KES ? String(process.env.MPESA_PRICE_KES).trim() : '50';
+    const price = parseInt(rawPrice, 10) || 50;
+    const amountInCents = Math.round(price * 100);
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!paystackKey) {
-      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY is not configured in Environment Variables.' });
+      return res.status(500).json({ error: 'PAYSTACK_SECRET_KEY environment variable is missing.' });
     }
 
     // Paystack Live Kenya M-Pesa Charge API
@@ -55,7 +57,7 @@ module.exports = async (req, res) => {
         },
         body: JSON.stringify({
           email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
-          amount: price * 100, // Paystack sub-units (cents)
+          amount: amountInCents,
           currency: 'KES',
           mobile_money: {
             phone: phone,

@@ -10,15 +10,11 @@ function generateAccessToken(checkoutId, phone) {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
@@ -27,8 +23,11 @@ module.exports = async (req, res) => {
       try { body = JSON.parse(body); } catch (e) {}
     }
     body = body || {};
+    if (req.query) {
+      body = Object.assign({}, req.query, body);
+    }
 
-    const checkoutID = body.CheckoutRequestID;
+    const checkoutID = body.CheckoutRequestID || body.checkoutId || body.reference;
     if (!checkoutID) {
       return res.status(400).json({ error: 'CheckoutRequestID is required' });
     }

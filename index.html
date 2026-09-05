@@ -8,6 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="description" content="Generate AAMVA-compliant PDF417 barcodes strictly for USA driver's licenses and state IDs.">
     <title>USA Driver's License PDF417 Generator — CICIOXPDF417</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <style>
         :root {
             --bg-grad: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
@@ -1147,10 +1148,42 @@
                 return;
             }
 
-            document.getElementById('paymentForm').style.display = 'none';
-            document.getElementById('paymentStatus').style.display = 'block';
-            document.getElementById('statusTitle').textContent = 'Initiating STK Push...';
-            document.getElementById('statusDesc').textContent = 'Sending payment prompt to ' + phoneInput + ' for KES ' + appConfig.price;
+            // Method 1: Paystack Native Inline SDK (Guaranteed 100% Popup Checkout)
+            if (typeof PaystackPop !== 'undefined') {
+                try {
+                    const handler = PaystackPop.setup({
+                        key: (appConfig && appConfig.paystackPublicKey) || 'pk_live_301f2f8a4f913d94ca1341a996b27e85c181bc7e',
+                        email: 'customer_' + phoneInput.replace(/\D/g, '') + '@cicioxpdf.com',
+                        amount: ((appConfig && appConfig.price) || 50) * 100,
+                        currency: 'KES',
+                        phone: phoneInput,
+                        ref: 'ciciox_' + Date.now(),
+                        onClose: function() {
+                            console.log('Paystack checkout window closed.');
+                        },
+                        callback: function(response) {
+                            markCurrentBarcodePaid(response.reference || 'PAYSTACK');
+                            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+                            document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed!';
+                            document.getElementById('statusDesc').textContent = 'Receipt: ' + (response.reference || 'PAYSTACK') + '. Unlocking 3 barcode generations...';
+                            setTimeout(() => {
+                                closePayModal();
+                            }, 1500);
+                        }
+                    });
+                    handler.openIframe();
+                    return;
+                } catch (e) {
+                    console.warn('PaystackPop inline error, falling back to API:', e);
+                }
+            }
+
+            // Method 2: API Fallback
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+            document.getElementById('statusTitle').textContent = 'Initiating M-Pesa Payment...';
+            document.getElementById('statusDesc').textContent = 'Sending payment prompt to ' + phoneInput + '...';
 
             try {
                 const res = await fetchAPI('/api/stkpush', {
@@ -1168,36 +1201,29 @@
                 }
 
                 if (!res.ok || !data.success) {
-                    throw new Error(data.error || 'Failed to trigger M-Pesa STK Push');
+                    throw new Error(data.error || 'Failed to trigger M-Pesa payment');
                 }
 
                 activeCheckoutID = data.CheckoutRequestID;
 
                 if (data.redirectUrl) {
-                    document.getElementById('statusTitle').textContent = 'Opening Paystack M-Pesa Checkout...';
-                    document.getElementById('statusDesc').textContent = 'Completing KES ' + data.amount + ' M-Pesa payment. Check your phone for the PIN prompt.';
-                    
-                    // Open Paystack checkout window
-                    const checkoutWin = window.open(data.redirectUrl, '_blank');
-                    if (!checkoutWin || checkoutWin.closed) {
-                        window.location.href = data.redirectUrl;
-                    }
+                    window.location.href = data.redirectUrl;
                 } else {
                     document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
                     document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
                 }
 
                 if (data.mockMode) {
-                    document.getElementById('mockTestActions').style.display = 'block';
+                    if (document.getElementById('mockTestActions')) document.getElementById('mockTestActions').style.display = 'block';
                 } else {
-                    document.getElementById('mockTestActions').style.display = 'none';
+                    if (document.getElementById('mockTestActions')) document.getElementById('mockTestActions').style.display = 'none';
                 }
 
                 startStatusPolling(data.CheckoutRequestID, data.phone);
 
             } catch (err) {
-                document.getElementById('paymentStatus').style.display = 'none';
-                document.getElementById('paymentForm').style.display = 'block';
+                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
                 errEl.textContent = '❌ ' + err.message;
                 errEl.style.display = 'block';
             }

@@ -1137,6 +1137,27 @@
             alert('Paid barcodes history cleared. All generated barcodes will require KES 50 for testing.');
         }
 
+        async function checkReturnPayment() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('reference') || urlParams.get('trxref');
+            if (ref) {
+                try {
+                    const res = await fetchAPI('/api/stkstatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ CheckoutRequestID: ref })
+                    });
+                    const data = await res.json().catch(() => null);
+                    if (data && data.status === 'COMPLETED') {
+                        addPaymentCredits(3);
+                        checkPaymentState();
+                        alert('🎉 Payment Confirmed! 3 Barcode Generation Credits Added.');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {}
+            }
+        }
+
         async function initiateMpesaPayment() {
             const phoneInput = document.getElementById('payPhone').value.trim();
             const errEl = document.getElementById('paymentError');
@@ -1149,6 +1170,11 @@
                 }
                 return;
             }
+
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+            document.getElementById('statusTitle').textContent = 'Connecting Paystack M-Pesa...';
+            document.getElementById('statusDesc').textContent = 'Opening secure payment checkout for ' + phoneInput + '...';
 
             try {
                 const res = await fetchAPI('/api/stkpush', {
@@ -1171,37 +1197,12 @@
 
                 activeCheckoutID = data.CheckoutRequestID;
 
-                // Method A: Paystack Access Code Popup Checkout (100% Reliable Client-Side Popup)
-                if (data.accessCode && typeof PaystackPop !== 'undefined') {
-                    const handler = PaystackPop.setup({
-                        access_code: data.accessCode,
-                        callback: function(response) {
-                            markCurrentBarcodePaid(response.reference || data.CheckoutRequestID || 'PAYSTACK');
-                            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
-                            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
-                            document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed!';
-                            document.getElementById('statusDesc').textContent = 'Receipt: ' + (response.reference || data.CheckoutRequestID) + '. Unlocking 3 barcode generations...';
-                            setTimeout(() => {
-                                closePayModal();
-                            }, 1500);
-                        },
-                        onClose: function() {
-                            console.log('Paystack popup closed.');
-                        }
-                    });
-                    handler.openIframe();
-                    return;
-                }
-
-                // Method B: Paystack Direct Redirect Fallback
+                // Direct redirect to Paystack Official Checkout (100% Reliable across all phones & browsers)
                 if (data.redirectUrl) {
                     window.location.href = data.redirectUrl;
                     return;
                 }
 
-                // Method C: Status Polling Fallback
-                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
-                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
                 document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
                 document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
 
@@ -1781,6 +1782,7 @@
             setTheme(safeGetStorage('ciciox_theme') || 'default');
             checkPaymentState();
             fetchAppConfig();
+            checkReturnPayment();
 
             const t = new Date();
             setVal('issueDate', localDateStr(t));

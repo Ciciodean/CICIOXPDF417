@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const price = parseInt(process.env.MPESA_PRICE_KES || '0', 10);
+  const price = parseInt(process.env.MPESA_PRICE_KES || '50', 10);
   const mockMode = process.env.MOCK_MODE === 'true';
 
   res.status(200).json({

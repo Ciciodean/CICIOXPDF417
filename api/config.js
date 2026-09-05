@@ -15,6 +15,7 @@ module.exports = async (req, res) => {
     price: price,
     currency: 'KES',
     mockMode: mockMode,
+    paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY || 'pk_live_301f2f8a4f913d94ca1341a996b27e85c181bc7e',
     shortcode: process.env.MPESA_SHORTCODE || '174379',
     environment: process.env.MPESA_ENV || 'live'
   });

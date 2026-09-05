@@ -644,7 +644,11 @@
                     <div class="status-title" id="statusTitle">Sending STK Push...</div>
                     <div class="status-desc" id="statusDesc">Please check your mobile phone for the M-Pesa prompt and enter your PIN.</div>
                     
-                    <div id="mockTestActions" style="display:none; margin-top:16px; border-top:1px dashed #30363d; padding-top:10px;">
+                    <div style="margin-top:16px; border-top:1px dashed #30363d; padding-top:10px;">
+                        <button class="dice-btn" onclick="switchPayTab('code')" style="color:#3fb950; font-weight:600;">✉️ Didn't receive PIN prompt? Enter M-Pesa Code Instead</button>
+                    </div>
+
+                    <div id="mockTestActions" style="display:none; margin-top:12px;">
                         <button class="dice-btn" onclick="forceMockPayment('COMPLETED')">⚡ [Test Mode] Simulate PIN Entry Success</button>
                         <button class="dice-btn" onclick="forceMockPayment('CANCELLED')" style="color:#ff7b72; margin-left:6px;">❌ Simulate Cancel</button>
                     </div>
@@ -1000,6 +1004,9 @@
         }
 
         function switchPayTab(mode) {
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+
             const modeCode = document.getElementById('payModeCode');
             const modeStk = document.getElementById('payModeStk');
             const btnCode = document.getElementById('tabBtnCode');

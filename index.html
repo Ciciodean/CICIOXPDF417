@@ -1172,8 +1172,20 @@
                 }
 
                 activeCheckoutID = data.CheckoutRequestID;
-                document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
-                document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
+
+                if (data.redirectUrl) {
+                    document.getElementById('statusTitle').textContent = 'Opening Paystack M-Pesa Checkout...';
+                    document.getElementById('statusDesc').textContent = 'Completing KES ' + data.amount + ' M-Pesa payment. Check your phone for the PIN prompt.';
+                    
+                    // Open Paystack checkout window
+                    const checkoutWin = window.open(data.redirectUrl, '_blank');
+                    if (!checkoutWin || checkoutWin.closed) {
+                        window.location.href = data.redirectUrl;
+                    }
+                } else {
+                    document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
+                    document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
+                }
 
                 if (data.mockMode) {
                     document.getElementById('mockTestActions').style.display = 'block';

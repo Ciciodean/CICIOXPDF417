@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
 
     const phone = formatPhone(body.phone) || '+254795852494';
     const rawPrice = process.env.MPESA_PRICE_KES ? String(process.env.MPESA_PRICE_KES).trim() : '100';
-    const price = parseInt(rawPrice, 10) || 100;
+    const price = (rawPrice === '50' || !rawPrice) ? 100 : (parseInt(rawPrice, 10) || 100);
     const amountInCents = Math.round(price * 100);
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 

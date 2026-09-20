@@ -22,6 +22,7 @@ const configHandler = require('./api/config');
 const stkpushHandler = require('./api/stkpush');
 const stkstatusHandler = require('./api/stkstatus');
 const callbackHandler = require('./api/callback');
+const verifyCodeHandler = require('./api/verify-code');
 
 const PORT = process.env.PORT || 8000;
 const ROOT_DIR = __dirname;
@@ -78,6 +79,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/stkpush' || pathname === '/api/stkpush.js') return stkpushHandler(req, res);
     if (pathname === '/api/stkstatus' || pathname === '/api/stkstatus.js') return stkstatusHandler(req, res);
     if (pathname === '/api/callback' || pathname === '/api/callback.js') return callbackHandler(req, res);
+    if (pathname === '/api/verify-code' || pathname === '/api/verify-code.js') return verifyCodeHandler(req, res);
 
     return res.status(404).json({ error: 'API Endpoint Not Found' });
   }

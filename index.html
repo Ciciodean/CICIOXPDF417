@@ -233,6 +233,16 @@
             Builds payloads strictly for <strong>USA Driver's Licenses &amp; State IDs</strong> per AAMVA Card Design Standards (Versions <code>02</code>&ndash;<code>10</code>). Country code (<code>DCG</code>) is locked to <code>USA</code>.
         </div>
 
+        <!-- Payment Confirmation Toast Banner -->
+        <div id="paymentConfirmedBanner" style="display:none; background:rgba(63,185,80,0.15); border:2px solid #3fb950; color:#ffffff; padding:14px; border-radius:10px; margin-bottom:20px; text-align:center;">
+            <div style="font-size:1.15rem; font-weight:800; color:#3fb950; margin-bottom:4px;" id="bannerTitle">
+                🎉 Payment Confirmed &amp; Credits Added!
+            </div>
+            <div style="font-size:0.9rem; color:var(--text-color);" id="bannerSub">
+                Fill in customer details below and click <strong>"⚡ Generate Barcode"</strong> to create your unlocked PDF417 barcode.
+            </div>
+        </div>
+
         <div class="main-grid">
             <!-- ==================== INPUT ==================== -->
             <div class="panel">
@@ -1375,6 +1385,24 @@
             alert('Paid barcodes history cleared. All generated barcodes will require KES 100 for testing.');
         }
 
+        function handlePaymentSuccess(creditsAdded, receipt) {
+            closePayModal();
+            addPaymentCredits(creditsAdded);
+
+            const banner = document.getElementById('paymentConfirmedBanner');
+            const bTitle = document.getElementById('bannerTitle');
+            const bSub = document.getElementById('bannerSub');
+
+            const total = getRemainingCredits();
+            if (bTitle) bTitle.innerHTML = '🎉 Payment Confirmed! Added ' + creditsAdded + ' Credit' + (creditsAdded === 1 ? '' : 's') + ' (Total: ' + total + ' Available)';
+            if (bSub) bSub.innerHTML = 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Fill in customer details below and click <strong>"⚡ Generate Barcode"</strong> to use 1 credit.';
+            
+            if (banner) {
+                banner.style.display = 'block';
+                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         async function checkReturnPayment() {
             const urlParams = new URLSearchParams(window.location.search);
             const ref = urlParams.get('reference') || urlParams.get('trxref');
@@ -1387,10 +1415,8 @@
                     });
                     const data = await res.json().catch(() => null);
                     if (data && data.status === 'COMPLETED') {
-                        addPaymentCredits(data.credits || (selectedBundle ? selectedBundle.credits : 1));
-                        generateBarcode();
-                        checkPaymentState();
-                        showPaymentSuccessScreen(data.receipt || ref);
+                        const credits = data.credits || (selectedBundle ? selectedBundle.credits : 1);
+                        handlePaymentSuccess(credits, data.receipt || ref);
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
                 } catch (e) {}
@@ -1503,10 +1529,8 @@
 
                     if (data.status === 'COMPLETED') {
                         clearInterval(activePollTimer);
-                        addPaymentCredits(data.credits || (selectedBundle ? selectedBundle.credits : 1));
-                        generateBarcode();
-                        checkPaymentState();
-                        showPaymentSuccessScreen(data.receipt || checkoutID);
+                        const credits = data.credits || (selectedBundle ? selectedBundle.credits : 1);
+                        handlePaymentSuccess(credits, data.receipt || checkoutID);
                         return;
                     } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
                         clearInterval(activePollTimer);

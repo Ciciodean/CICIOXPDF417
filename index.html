@@ -1303,6 +1303,7 @@
         }
 
         function showPaymentSuccessScreen(receipt) {
+            consumeCreditIfRequired();
             if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
             if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
             if (document.getElementById('payIframeContainer')) document.getElementById('payIframeContainer').style.display = 'none';
@@ -1312,13 +1313,15 @@
             const imgPreview = document.getElementById('modalBarcodePreview');
             const canvas = document.getElementById('barcode-canvas');
 
-            if (msgEl) msgEl.textContent = 'Receipt: ' + (receipt || 'M-PESA VERIFIED') + ' — Your barcode is ready to download!';
+            const credits = getRemainingCredits();
+            if (msgEl) msgEl.textContent = 'Receipt: ' + (receipt || 'M-PESA VERIFIED') + ' — ' + credits + ' credit' + (credits === 1 ? '' : 's') + ' remaining. Your barcode is ready to download:';
             if (imgPreview && canvas) {
                 imgPreview.src = canvas.toDataURL('image/png');
             }
 
             if (successEl) successEl.style.display = 'block';
             document.getElementById('payModal').style.display = 'flex';
+            updatePayUI();
         }
 
         function scrollToBarcode() {
@@ -1970,6 +1973,11 @@
         }
 
         function downloadPNG() {
+            if (!isCurrentBarcodePaid()) {
+                openPayModal();
+                return;
+            }
+            consumeCreditIfRequired();
             if (!currentRaw) return;
             const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
             if (!bwipEngine) return;
@@ -1983,6 +1991,11 @@
         }
 
         function downloadSVG() {
+            if (!isCurrentBarcodePaid()) {
+                openPayModal();
+                return;
+            }
+            consumeCreditIfRequired();
             if (!currentRaw) return;
             const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
             if (!bwipEngine) return;

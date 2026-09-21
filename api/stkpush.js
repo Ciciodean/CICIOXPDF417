@@ -33,8 +33,9 @@ module.exports = async (req, res) => {
     }
 
     const phone = formatPhone(body.phone) || '+254795852494';
-    const rawPrice = process.env.MPESA_PRICE_KES ? String(process.env.MPESA_PRICE_KES).trim() : '100';
-    const price = (rawPrice === '50' || !rawPrice) ? 100 : (parseInt(rawPrice, 10) || 100);
+    const reqAmount = parseInt(body.amount, 10);
+    const price = (reqAmount && reqAmount >= 100) ? reqAmount : 100;
+    const credits = parseInt(body.credits, 10) || (price >= 400 ? 5 : (price >= 250 ? 3 : 1));
     const amountInCents = Math.round(price * 100);
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
@@ -56,7 +57,8 @@ module.exports = async (req, res) => {
         amount: amountInCents,
         currency: 'KES',
         callback_url: origin,
-        channels: ['mobile_money', 'card']
+        channels: ['mobile_money', 'card'],
+        metadata: { credits: credits }
       })
     });
 
@@ -71,6 +73,7 @@ module.exports = async (req, res) => {
         CheckoutRequestID: initData.data.reference,
         CustomerMessage: 'Opening Paystack M-Pesa Checkout...',
         amount: price,
+        credits: credits,
         phone: phone
       });
     }
@@ -87,6 +90,7 @@ module.exports = async (req, res) => {
       CheckoutRequestID: mockCheckoutID,
       CustomerMessage: `Prompt sent to ${phone} for KES ${price}. Enter your M-Pesa PIN.`,
       amount: price,
+      credits: credits,
       phone: phone
     });
 

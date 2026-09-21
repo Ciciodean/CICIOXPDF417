@@ -236,9 +236,12 @@
         <div class="main-grid">
             <!-- ==================== INPUT ==================== -->
             <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-title">📝 License Data</span>
-                    <span class="live-badge" id="liveBadge">● LIVE</span>
+                <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span class="panel-title">📝 License Data</span>
+                        <span class="live-badge" id="liveBadge">● LIVE</span>
+                    </div>
+                    <button type="button" onclick="generateRandomSampleData()" class="dice-btn" style="font-size:0.78rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:4px 10px; border-radius:12px; font-weight:600; cursor:pointer;">🎲 Randomize Sample Data</button>
                 </div>
                 <div class="field-grid">
 
@@ -397,6 +400,15 @@
                     <div class="field full"><label>Street Address 2 (optional)</label><input type="text" id="address2" placeholder="APT 4B" maxlength="36"></div>
                     <div class="field"><label>City</label><input type="text" id="city" placeholder="MONTGOMERY" maxlength="20"></div>
                     <div class="field"><label>State Jurisdiction (DAJ)</label>
+                        <!-- Quick State Pill Buttons -->
+                        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:6px;">
+                            <button type="button" onclick="loadStatePreset('CA')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌴 CA</button>
+                            <button type="button" onclick="loadStatePreset('NY')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🗽 NY</button>
+                            <button type="button" onclick="loadStatePreset('TX')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🤠 TX</button>
+                            <button type="button" onclick="loadStatePreset('FL')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">☀️ FL</button>
+                            <button type="button" onclick="loadStatePreset('WA')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌲 WA</button>
+                            <button type="button" onclick="loadStatePreset('IL')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌾 IL</button>
+                        </div>
                         <select id="state" onchange="onStateChange()">
                             <option value="AL">Alabama</option>
                             <option value="AK">Alaska</option>
@@ -661,10 +673,33 @@
                     🧪 <strong>TEST MODE ACTIVE:</strong> No real M-Pesa funds will be deducted. Enter any phone number to test.
                 </div>
 
-                <div class="price-box">
-                    <div class="price-label">1 Barcode Generation Pass</div>
-                    <div class="price-amount" id="modalPrice">KES 100</div>
-                    <div class="price-sub">Unlocks 1 barcode generation (PNG, SVG & raw payload)</div>
+                <div class="price-box" style="padding:12px; margin-bottom:15px;">
+                    <div style="font-size:0.85rem; font-weight:700; color:var(--text-color); margin-bottom:10px;">Select Barcode Pass Package:</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="bundle-card" id="bundleCard1" onclick="selectPaymentBundle(100, 1)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:2px solid var(--accent-color); background:rgba(46,160,67,0.1); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 1 Barcode Pass</strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 1 Barcode Generation</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 100</div>
+                        </div>
+                        
+                        <div class="bundle-card" id="bundleCard3" onclick="selectPaymentBundle(250, 3)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 3 Barcodes Bundle <span style="font-size:0.72rem; background:#238636; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">SAVE KES 50</span></strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 3 Barcode Generations</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 250</div>
+                        </div>
+
+                        <div class="bundle-card" id="bundleCard5" onclick="selectPaymentBundle(400, 5)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 5 Barcodes Bundle <span style="font-size:0.72rem; background:#d29922; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">BEST VALUE</span></strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 5 Barcode Generations</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 400</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="paymentForm">
@@ -835,6 +870,58 @@
             'WI': { dl: 'W1234567890123', city: 'MADISON', zip: '53701', address1: '2 E MAIN ST', class: 'D', res: 'NONE', end: 'NONE' },
             'WY': { dl: '123456789', city: 'CHEYENNE', zip: '82001', address1: '200 W 24TH ST', class: 'C', res: 'NONE', end: 'NONE' }
         };
+
+        let selectedBundle = { price: 100, credits: 1 };
+
+        function selectPaymentBundle(price, credits) {
+            selectedBundle = { price: price, credits: credits };
+            document.querySelectorAll('.bundle-card').forEach(card => {
+                card.style.border = '1px solid var(--panel-border)';
+                card.style.background = 'rgba(255,255,255,0.04)';
+            });
+            const activeCard = document.getElementById('bundleCard' + credits);
+            if (activeCard) {
+                activeCard.style.border = '2px solid var(--accent-color)';
+                activeCard.style.background = 'rgba(46,160,67,0.1)';
+            }
+            const labels = document.querySelectorAll('.btnPriceLabel');
+            labels.forEach(el => { el.textContent = 'KES ' + price; });
+        }
+
+        function generateRandomSampleData() {
+            const firstNames = ['JAMES', 'JOHN', 'ROBERT', 'MICHAEL', 'WILLIAM', 'DAVID', 'RICHARD', 'JOSEPH', 'MARY', 'PATRICIA', 'JENNIFER', 'LINDA', 'ELIZABETH', 'BARBARA', 'SUSAN', 'JESSICA', 'SARAH', 'KAREN', 'LISA', 'NANCY'];
+            const lastNames = ['SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA', 'MILLER', 'DAVIS', 'RODRIGUEZ', 'MARTINEZ', 'HERNANDEZ', 'LOPEZ', 'GONZALEZ', 'WILSON', 'ANDERSON'];
+            const middleNames = ['ALEXANDER', 'DANIEL', 'JAMES', 'LEE', 'MICHAEL', 'PAUL', 'ROBERT', 'THOMAS', 'ANN', 'ELIZABETH', 'MARIE', 'GRACE', 'ROSE', ''];
+            const streets = ['MAIN ST', 'OAK AVE', 'MAPLE DR', 'WASHINGTON BLVD', 'CENTER ST', 'PINE RD', 'PARK AVE', 'ELM ST', 'CEDAR LN', 'LAKE RD', 'BROADWAY'];
+
+            const statesList = Object.keys(statePresets);
+            const randomState = statesList[Math.floor(Math.random() * statesList.length)];
+
+            loadStatePreset(randomState);
+
+            const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const mn = middleNames[Math.floor(Math.random() * middleNames.length)];
+            const street = (Math.floor(Math.random() * 8999) + 100) + ' ' + streets[Math.floor(Math.random() * streets.length)];
+
+            setVal('firstName', fn);
+            setVal('lastName', ln);
+            setVal('middleName', mn);
+            setVal('address1', street);
+
+            const y = Math.floor(Math.random() * 27) + 1975;
+            const m = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const d = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+            setVal('dob', y + '-' + m + '-' + d);
+
+            const h = Math.floor(Math.random() * 15) + 62;
+            setVal('height', h);
+            updateHeightHint();
+
+            regenDD();
+            saveFormState();
+            generateBarcode();
+        }
 
         function getVal(id, defaultVal = '') {
             const el = document.getElementById(id);
@@ -1222,7 +1309,7 @@
                 const res = await fetchAPI('/api/stkpush', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phoneInput })
+                    body: JSON.stringify({ phone: phoneInput, amount: selectedBundle.price, credits: selectedBundle.credits })
                 });
 
                 const text = await res.text();

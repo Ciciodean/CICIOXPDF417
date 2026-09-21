@@ -850,6 +850,24 @@
             return null;
         }
 
+        function saveFormState() {
+            const fields = ['lastName', 'firstName', 'middleName', 'suffix', 'dob', 'sex', 'height', 'weight', 'eyeColor', 'hairColor', 'issueDate', 'expirationDate', 'address1', 'address2', 'city', 'state', 'zip', 'vehicleClass', 'restrictions', 'endorsements', 'licenseNumber', 'iin', 'aamvaVersion', 'jurisdictionVersion'];
+            const state = {};
+            fields.forEach(id => { state[id] = getVal(id); });
+            safeSetStorage('ciciox_form_state', JSON.stringify(state));
+        }
+
+        function restoreFormState() {
+            const saved = safeGetStorage('ciciox_form_state');
+            if (!saved) return false;
+            try {
+                const state = JSON.parse(saved);
+                if (!state.licenseNumber) return false;
+                Object.keys(state).forEach(id => setVal(id, state[id]));
+                return true;
+            } catch (e) { return false; }
+        }
+
         function safeSetStorage(key, val) {
             try {
                 if (typeof localStorage !== 'undefined' && localStorage) {
@@ -1759,24 +1777,31 @@
         // ================= Init =================
         window.onload = function () {
             setTheme(safeGetStorage('ciciox_theme') || 'default');
-            checkPaymentState();
             fetchAppConfig();
+
+            const restored = restoreFormState();
+            if (!restored) {
+                const t = new Date();
+                setVal('issueDate', localDateStr(t));
+                const exp = new Date(t); exp.setFullYear(exp.getFullYear() + 5);
+                setVal('expirationDate', localDateStr(exp));
+                setVal('dob', '1995-05-15');
+                regenDD();
+                loadStatePreset('WA');
+            } else {
+                updateDLFormat();
+                updateHeightHint();
+                generateBarcode();
+            }
+
             checkReturnPayment();
-
-            const t = new Date();
-            setVal('issueDate', localDateStr(t));
-            const exp = new Date(t); exp.setFullYear(exp.getFullYear() + 5);
-            setVal('expirationDate', localDateStr(exp));
-            setVal('dob', '1995-05-15');
-
-            regenDD();
-            loadStatePreset('WA');
-            updateHeightHint();
+            checkPaymentState();
 
             document.querySelectorAll('#lastName, #firstName, #middleName, #suffix, #dob, #sex, #height, #weight, #eyeColor, #hairColor, #issueDate, #expirationDate, #address1, #address2, #city, #state, #zip, #vehicleClass, #restrictions, #endorsements, #dd, #jurisdictionVersion, #iin, #docType, #aamvaVersion, #licenseNumber, #barcodeColumns, #barcodeRowHeight, #barcodeBg').forEach(el => {
                 el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
                     if (el.id === 'state') updateDLFormat();
                     if (el.id === 'height') updateHeightHint();
+                    saveFormState();
                     scheduleRegen();
                 });
             });

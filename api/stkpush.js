@@ -4,13 +4,13 @@ function formatPhone(phone) {
   if ((digits.startsWith('07') || digits.startsWith('01')) && digits.length === 10) {
     digits = '254' + digits.substring(1);
   } else if (digits.startsWith('254') && digits.length === 12) {
-    // Valid format
+    // Valid 12-digit format
   } else if (digits.length === 9 && (digits.startsWith('7') || digits.startsWith('1'))) {
     digits = '254' + digits;
   } else {
     return null;
   }
-  return '+' + digits;
+  return digits; // Strictly 2547XXXXXXXX without plus sign for Safaricom M-Pesa API
 }
 
 module.exports = async (req, res) => {
@@ -32,9 +32,9 @@ module.exports = async (req, res) => {
       body = Object.assign({}, req.query, body);
     }
 
-    const phone = formatPhone(body.phone) || '+254795852494';
+    const rawPhone = body.phone || '0795852494';
+    const phone = formatPhone(rawPhone) || '254795852494';
     const reqAmount = parseInt(body.amount, 10);
-    // Paystack minimum charge for KES is 10 KES (1000 kobo)
     const price = (reqAmount && reqAmount >= 10) ? reqAmount : 10;
     const credits = parseInt(body.credits, 10) || (price >= 40 ? 5 : (price >= 25 ? 3 : 1));
     const amountInCents = Math.round(price * 100);
@@ -46,7 +46,48 @@ module.exports = async (req, res) => {
 
     const origin = req.headers.referer || req.headers.origin || 'https://cicioxpdf-417.vercel.app/';
 
-    // Paystack Official Transaction Initialize API
+    // 1. Try Direct Paystack Charge API for Instant M-Pesa STK Push
+    try {
+      const chargeRes = await fetch('https://api.paystack.co/charge', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + paystackKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: `customer_${phone}@cicioxpdf.com`,
+          amount: amountInCents,
+          currency: 'KES',
+          mobile_money: {
+            phone: phone,
+            provider: 'mpesa'
+          },
+          metadata: { credits: credits }
+        })
+      });
+
+      const chargeData = await chargeRes.json().catch(() => null);
+
+      if (chargeData && chargeData.status && chargeData.data) {
+        const ref = chargeData.data.reference;
+        const status = chargeData.data.status;
+        if (status === 'pay_offline' || status === 'pending' || status === 'success') {
+          return res.status(200).json({
+            success: true,
+            provider: 'paystack_direct_stk',
+            CheckoutRequestID: ref,
+            CustomerMessage: chargeData.data.display_text || `M-Pesa STK Push sent to ${phone}. Enter your M-Pesa PIN.`,
+            amount: price,
+            credits: credits,
+            phone: phone
+          });
+        }
+      }
+    } catch (chargeErr) {
+      console.warn('Paystack direct charge error, falling back:', chargeErr);
+    }
+
+    // 2. Fallback: Paystack Official Transaction Initialize API
     const initRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
@@ -54,7 +95,7 @@ module.exports = async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email: `customer_${phone.replace(/\D/g, '')}@cicioxpdf.com`,
+        email: `customer_${phone}@cicioxpdf.com`,
         amount: amountInCents,
         currency: 'KES',
         callback_url: origin,

@@ -130,23 +130,14 @@
         /* Barcode Canvas & Overlay */
         .barcode-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 340px; position: relative; }
         .canvas-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 10px; padding: 20px; border: 1px solid var(--panel-border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; height: auto; transition: filter 0.3s; }
-        #barcode-canvas.locked { filter: blur(5px) opacity(0.4); }
+        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; height: auto; }
         
-        .pay-overlay { position: absolute; inset: 0; background: var(--panel-bg); backdrop-filter: blur(2px); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; border: 1px solid var(--panel-border); z-index: 10; }
-        .pay-overlay-icon { font-size: 2.2rem; margin-bottom: 8px; }
-        .pay-overlay h3 { color: #f0883e; font-size: 1.05rem; margin-bottom: 6px; }
-        .pay-overlay p { color: var(--text-muted); font-size: 0.82rem; max-width: 320px; margin-bottom: 16px; line-height: 1.4; }
-        .pay-btn-glow { background: var(--btn-bg); color: #fff; border: none; padding: 12px 22px; border-radius: 8px; font-weight: 700; font-size: 0.92rem; cursor: pointer; box-shadow: 0 0 16px rgba(46, 160, 67, 0.4); transition: all 0.2s; }
-        .pay-btn-glow:hover { transform: scale(1.03); box-shadow: 0 0 24px rgba(46, 160, 67, 0.6); }
-
         .placeholder { color: var(--text-muted); text-align: center; padding: 60px; }
         .placeholder svg { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 15px; }
         
         .download-btns { display: flex; gap: 10px; margin-top: 15px; }
         .download-btns button { flex: 1; padding: 10px; background: var(--input-bg); border: 1px solid var(--panel-border); color: var(--accent-color); border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
         .download-btns button:hover { border-color: var(--accent-color); }
-        .download-btns.locked button { opacity: 0.5; cursor: pointer; }
 
         .info-box { padding: 10px 14px; border-radius: 8px; background: rgba(88, 166, 255, 0.07); border: 1px solid var(--panel-border); color: var(--accent-color); font-size: 0.8rem; margin-bottom: 14px; }
 
@@ -551,12 +542,6 @@
                         
                         <div class="canvas-container">
                             <canvas id="barcode-canvas"></canvas>
-                            <div id="payOverlay" class="pay-overlay" style="display:none;">
-                                <div class="pay-overlay-icon">🔒</div>
-                                <h3>WATERMARKED PREVIEW</h3>
-                                <p>Pay <strong class="badge-price">KES 10</strong> via M-Pesa to download PNG/SVG exports and unblur this barcode.</p>
-                                <button class="pay-btn-glow" onclick="openPayModal()">📱 Unlock This Barcode for KES 10</button>
-                            </div>
                         </div>
                     </div>
 
@@ -1120,8 +1105,6 @@
 
         function updatePayUI() {
             const badge = document.getElementById('payStatusBadge');
-            const canvas = document.getElementById('barcode-canvas');
-            const payOverlay = document.getElementById('payOverlay');
             const downloadBtns = document.getElementById('downloadBtns');
             const resetBtn = document.getElementById('resetAccessBtn');
 
@@ -1131,9 +1114,6 @@
                 badge.className = 'pay-badge unlocked';
                 badge.onclick = null;
                 badge.innerHTML = '🎁 FREE TEST MODE (ALL UNLOCKED)';
-                if (canvas) canvas.classList.remove('locked');
-                if (payOverlay) payOverlay.style.display = 'none';
-                if (downloadBtns) downloadBtns.classList.remove('locked');
                 if (resetBtn) resetBtn.style.display = 'none';
                 return;
             }
@@ -1141,33 +1121,17 @@
             const credits = getRemainingCredits();
             const isPaid = isCurrentBarcodePaid();
 
-            if (isPaid) {
+            if (isPaid || credits > 0) {
                 badge.className = 'pay-badge unlocked';
                 badge.onclick = function() {
-                    alert('⚡ You have ' + credits + ' Barcode Generation Credit' + (credits === 1 ? '' : 's') + ' remaining!');
+                    alert('⚡ You have ' + credits + ' Barcode Generation Credit' + (credits === 1 ? '' : 's') + ' available!');
                 };
-                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' REMAINING (UNLOCKED)';
-                if (canvas) canvas.classList.remove('locked');
-                if (payOverlay) payOverlay.style.display = 'none';
-                if (downloadBtns) downloadBtns.classList.remove('locked');
-                if (resetBtn) resetBtn.style.display = 'inline';
-            } else if (credits > 0) {
-                badge.className = 'pay-badge unlocked';
-                badge.onclick = function() {
-                    alert('⚡ You have ' + credits + ' Credit' + (credits === 1 ? '' : 's') + ' ready! Fill in data and click "Generate Barcode" to use 1 credit.');
-                };
-                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' AVAILABLE — Click Generate';
-                if (canvas && currentRaw) canvas.classList.add('locked');
-                if (payOverlay && currentRaw) payOverlay.style.display = 'flex';
-                if (downloadBtns) downloadBtns.classList.add('locked');
+                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' AVAILABLE — Click Generate / Download';
                 if (resetBtn) resetBtn.style.display = 'inline';
             } else {
                 badge.className = 'pay-badge locked';
                 badge.onclick = openPayModal;
                 badge.innerHTML = '🔒 0 CREDITS — BUY CREDITS (' + appConfig.currency + ' ' + appConfig.price + ')';
-                if (canvas && currentRaw) canvas.classList.add('locked');
-                if (payOverlay && currentRaw) payOverlay.style.display = 'flex';
-                if (downloadBtns) downloadBtns.classList.add('locked');
                 if (resetBtn) resetBtn.style.display = 'none';
             }
         }
@@ -1594,8 +1558,15 @@
             }
         }
 
+        function canAccessBarcode() {
+            if (appConfig.price <= 0) return true;
+            if (isCurrentBarcodePaid()) return true;
+            if (getRemainingCredits() > 0) return true;
+            return false;
+        }
+
         function handleDownload(type) {
-            if (!isCurrentBarcodePaid()) {
+            if (!canAccessBarcode()) {
                 openPayModal();
                 return;
             }
@@ -1836,8 +1807,8 @@
             const el = document.getElementById('rawContent');
             if (!currentRaw) return;
 
-            if (!isCurrentBarcodePaid()) {
-                el.innerHTML = '<div style="text-align:center; padding: 20px; color:#f0883e;">🔒 Pay ' + appConfig.currency + ' ' + appConfig.price + ' to reveal raw payload and copy code for this barcode.<br><br><button class="pay-btn-glow" onclick="openPayModal()">📱 Unlock This Barcode</button></div>';
+            if (!canAccessBarcode()) {
+                el.innerHTML = '<div style="text-align:center; padding: 20px; color:#f0883e;">🔒 Purchase credits (' + appConfig.currency + ' ' + appConfig.price + ') to reveal raw payload and copy code.<br><br><button class="pay-btn-glow" onclick="openPayModal()">📱 Buy Credits (' + appConfig.currency + ' ' + appConfig.price + ')</button></div>';
                 return;
             }
 
@@ -1879,7 +1850,7 @@
         }
 
         function copyRaw(ev) {
-            if (!isCurrentBarcodePaid()) {
+            if (!canAccessBarcode()) {
                 openPayModal();
                 return;
             }
@@ -2013,7 +1984,7 @@
         }
 
         function downloadPNG() {
-            if (!isCurrentBarcodePaid()) {
+            if (!canAccessBarcode()) {
                 openPayModal();
                 return;
             }
@@ -2031,7 +2002,7 @@
         }
 
         function downloadSVG() {
-            if (!isCurrentBarcodePaid()) {
+            if (!canAccessBarcode()) {
                 openPayModal();
                 return;
             }

@@ -610,31 +610,31 @@
             <div class="modal-header" style="text-align:left; border-bottom:1px solid var(--panel-border); padding-bottom:12px; margin-bottom:16px;">
                 <div class="mpesa-logo-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border-color:#58a6ff;">USER GUIDE &amp; INSTRUCTIONS</div>
                 <h2 style="font-size:1.3rem; margin-top:6px;">📖 How to Use CICIOX PDF417 Generator</h2>
-                <p>Follow these 4 simple steps to generate, unlock, and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
+                <p>Follow these 4 simple steps to purchase credits, generate, and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
             </div>
             
             <div class="modal-body" style="font-size:0.9rem; line-height:1.6; color:var(--text-color);">
                 <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">1</div>
                     <div>
-                        <strong style="color:var(--text-color); font-size:0.98rem;">Select State &amp; Fill Customer Data</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Select the US State (e.g. Washington <code>WA</code>, California <code>CA</code>, New York <code>NY</code>). The official AAMVA ISO Issuer ID (IIN) auto-syncs automatically. Enter the Driver's License Number, Last Name, First Name, Date of Birth, Expiration Date, and Address. <em>(Middle Name is completely optional!)</em></div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Purchase Barcode Generation Credits</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"🔒 BUY CREDITS"</strong> or the top status badge. Select your bundle (1 Credit, 3 Credits, or 5 Credits Bundle), enter your M-Pesa phone number, and enter your PIN on your mobile phone to complete payment.</div>
                     </div>
                 </div>
 
                 <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">2</div>
                     <div>
-                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate PDF417 Barcode</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"⚡ Generate Barcode"</strong> or press Enter. The system validates the license format and renders an AAMVA 2020 PDF417 2D barcode canvas.</div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Select State &amp; Fill Customer Data</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Select the US State (e.g. Washington <code>WA</code>, California <code>CA</code>, New York <code>NY</code>). The official AAMVA ISO Issuer ID (IIN) auto-syncs automatically. Enter the Driver's License Number, Last Name, First Name, Date of Birth, Expiration Date, and Address. <em>(Middle Name is optional!)</em></div>
                     </div>
                 </div>
 
                 <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
                     <div>
-                        <strong style="color:var(--text-color); font-size:0.98rem;">Pay KES 100 via M-Pesa STK Push</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"📱 Unlock Barcode (KES 100)"</strong>. Enter your Kenyan M-Pesa phone number (e.g., <code>0712345678</code>) and tap Pay. Paystack sends an automated STK Push PIN prompt directly to your phone. Enter your PIN to complete payment.</div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate PDF417 Barcode</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"⚡ Generate PDF417 Barcode"</strong> or press Enter. The system validates the license format and renders a clean, high-resolution AAMVA PDF417 2D barcode canvas. 1 credit is used per generated barcode.</div>
                     </div>
                 </div>
 
@@ -642,7 +642,7 @@
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">4</div>
                     <div>
                         <strong style="color:var(--text-color); font-size:0.98rem;">Download PNG / SVG &amp; Inspect Data</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Once confirmed, the barcode automatically unblurs! Click <strong>PNG</strong> or <strong>SVG</strong> to download high-resolution barcode images, inspect raw bytes in the Raw Payload tab, or verify compliance in the Inspector panel.</div>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>📥 PNG (hi-res)</strong> or <strong>📥 SVG (vector)</strong> to download print-ready barcode images, inspect raw bytes in the Raw Payload tab, or verify compliance in the Inspector panel.</div>
                     </div>
                 </div>
 
@@ -659,8 +659,8 @@
             <button class="modal-close" onclick="closePayModal()">&times;</button>
             <div class="modal-header">
                 <div class="mpesa-logo-badge">PAYSTACK M-PESA ONLINE</div>
-                <h2>Unlock Barcode Generations</h2>
-                <p>Pay KES 100 per barcode generation (PNG, SVG, and Raw Data)</p>
+                <h2>Buy Barcode Generation Credits</h2>
+                <p>Select a credit bundle below to generate &amp; download high-res PDF417 barcodes</p>
             </div>
             
             <div class="modal-body">
@@ -1341,7 +1341,7 @@
         function resetPaymentAccess() {
             localStorage.removeItem('ciciox_paid_barcodes');
             checkPaymentState();
-            alert('Paid barcodes history cleared. All generated barcodes will require KES 100 for testing.');
+            alert('Paid barcodes history cleared.');
         }
 
         function handlePaymentSuccess(creditsAdded, receipt) {

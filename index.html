@@ -951,9 +951,17 @@
 
         async function fetchAPI(endpoint, options = {}) {
             let res = await fetch(endpoint, options);
-            if (res.status === 405 && !endpoint.includes('.js')) {
+            if (!res.ok && res.status === 405 && !endpoint.includes('.js')) {
                 const altEndpoint = endpoint + '.js';
                 res = await fetch(altEndpoint, options);
+            }
+            if (!res.ok && res.status === 405 && options && options.method === 'POST') {
+                try {
+                    const parsed = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+                    const query = new URLSearchParams(parsed).toString();
+                    const getEndpoint = (endpoint.includes('.js') ? endpoint : endpoint + '.js') + '?' + query;
+                    res = await fetch(getEndpoint, { method: 'GET' });
+                } catch (e) {}
             }
             return res;
         }

@@ -1,6 +1,21 @@
 {
   "version": 2,
+  "rewrites": [
+    { "source": "/api/config", "destination": "/api/config.js" },
+    { "source": "/api/stkpush", "destination": "/api/stkpush.js" },
+    { "source": "/api/stkstatus", "destination": "/api/stkstatus.js" },
+    { "source": "/api/callback", "destination": "/api/callback.js" },
+    { "source": "/api/verify-code", "destination": "/api/verify-code.js" }
+  ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Authorization" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

@@ -67,11 +67,34 @@ module.exports = async (req, res) => {
           if (status === 'success' || status === 'completed') {
             const receipt = paystackData.data.reference || paystackData.data.receipt_number || checkoutID;
             const token = generateAccessToken(checkoutID, body.phone || '254700000000');
+
+            // Extract credits from metadata or calculate from amount
+            let credits = 1;
+            if (paystackData.data.metadata) {
+              let meta = paystackData.data.metadata;
+              if (typeof meta === 'string') {
+                try { meta = JSON.parse(meta); } catch (e) {}
+              }
+              if (meta && meta.credits) {
+                credits = parseInt(meta.credits, 10);
+              }
+            }
+
+            // Fallback from amount paid in KES (amount is in kobo)
+            if (!credits || credits <= 1) {
+              const amountKes = paystackData.data.amount ? Math.round(paystackData.data.amount / 100) : 0;
+              if (amountKes >= 40) credits = 5;
+              else if (amountKes >= 25) credits = 3;
+              else if (amountKes >= 10) credits = 1;
+            }
+
             return res.status(200).json({
               status: 'COMPLETED',
               message: 'Payment confirmed via Paystack M-Pesa',
               receipt: receipt,
-              token: token
+              token: token,
+              credits: credits,
+              amount: paystackData.data.amount ? Math.round(paystackData.data.amount / 100) : 10
             });
           } else if (status === 'failed') {
             return res.status(200).json({
@@ -100,11 +123,13 @@ module.exports = async (req, res) => {
     } else {
       const receipt = 'PS_MPESA_' + Date.now().toString(36).toUpperCase();
       const token = generateAccessToken(checkoutID, body.phone || '254700000000');
+      const credits = parseInt(body.credits, 10) || 1;
       return res.status(200).json({
         status: 'COMPLETED',
         message: 'The M-Pesa payment request was processed successfully.',
         receipt: receipt,
-        token: token
+        token: token,
+        credits: credits
       });
     }
 

@@ -1394,7 +1394,8 @@
                     });
                     const data = await res.json().catch(() => null);
                     if (data && data.status === 'COMPLETED') {
-                        const credits = data.credits || (selectedBundle ? selectedBundle.credits : 1);
+                        const savedCredits = parseInt(safeGetStorage('ciciox_pending_credits') || '1', 10);
+                        const credits = (data && data.credits) ? data.credits : (selectedBundle && selectedBundle.credits > 1 ? selectedBundle.credits : savedCredits);
                         handlePaymentSuccess(credits, data.receipt || ref);
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
@@ -1416,6 +1417,7 @@
             }
 
             try {
+                safeSetStorage('ciciox_pending_credits', String(selectedBundle.credits));
                 const res = await fetchAPI('/api/stkpush', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1508,7 +1510,8 @@
 
                     if (data.status === 'COMPLETED') {
                         clearInterval(activePollTimer);
-                        const credits = data.credits || (selectedBundle ? selectedBundle.credits : 1);
+                        const savedCredits = parseInt(safeGetStorage('ciciox_pending_credits') || '1', 10);
+                        const credits = (data && data.credits) ? data.credits : (selectedBundle && selectedBundle.credits > 1 ? selectedBundle.credits : savedCredits);
                         handlePaymentSuccess(credits, data.receipt || checkoutID);
                         return;
                     } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {

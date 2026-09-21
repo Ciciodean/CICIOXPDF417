@@ -1071,39 +1071,27 @@
             safeSetStorage('ciciox_barcode_credits', String(newTotal));
             
             if (currentRaw) {
-                const hash = getBarcodeHash(currentRaw);
-                const paidMap = JSON.parse(safeGetStorage('ciciox_paid_barcodes') || '{}');
-                if (!paidMap[hash]) {
-                    paidMap[hash] = { timestamp: Date.now() };
-                    safeSetStorage('ciciox_paid_barcodes', JSON.stringify(paidMap));
-                    if (newTotal > 0) {
-                        safeSetStorage('ciciox_barcode_credits', String(Math.max(0, newTotal - 1)));
-                    }
-                }
+                consumeCreditIfRequired();
+            } else {
+                updatePayUI();
             }
-            updatePayUI();
         }
 
         function isCurrentBarcodePaid() {
             if (appConfig.price <= 0) return true; // Free test mode
-            if (!currentRaw) return getRemainingCredits() > 0;
+            if (!currentRaw) return false;
             
             const hash = getBarcodeHash(currentRaw);
             const paidMap = JSON.parse(safeGetStorage('ciciox_paid_barcodes') || '{}');
-            if (paidMap[hash]) return true;
-
-            const credits = getRemainingCredits();
-            if (credits > 0) return true; // User has active credits!
-
-            return false;
+            return !!paidMap[hash];
         }
 
         function consumeCreditIfRequired() {
-            if (!currentRaw) return;
-            if (appConfig.price <= 0) return;
+            if (!currentRaw) return false;
+            if (appConfig.price <= 0) return true;
             const hash = getBarcodeHash(currentRaw);
             const paidMap = JSON.parse(safeGetStorage('ciciox_paid_barcodes') || '{}');
-            if (paidMap[hash]) return; // Already paid/unlocked
+            if (paidMap[hash]) return true; // Already paid/unlocked
 
             const credits = getRemainingCredits();
             if (credits > 0) {
@@ -1111,7 +1099,10 @@
                 safeSetStorage('ciciox_paid_barcodes', JSON.stringify(paidMap));
                 safeSetStorage('ciciox_barcode_credits', String(Math.max(0, credits - 1)));
                 updatePayUI();
+                return true;
             }
+
+            return false;
         }
 
         function markCurrentBarcodePaid(receipt) {
@@ -1145,7 +1136,7 @@
             const credits = getRemainingCredits();
             const isPaid = isCurrentBarcodePaid();
 
-            if (isPaid || credits > 0) {
+            if (isPaid) {
                 badge.className = 'pay-badge unlocked';
                 badge.onclick = function() {
                     alert('⚡ You have ' + credits + ' Barcode Generation Credit' + (credits === 1 ? '' : 's') + ' remaining!');
@@ -1155,10 +1146,20 @@
                 if (payOverlay) payOverlay.style.display = 'none';
                 if (downloadBtns) downloadBtns.classList.remove('locked');
                 if (resetBtn) resetBtn.style.display = 'inline';
+            } else if (credits > 0) {
+                badge.className = 'pay-badge unlocked';
+                badge.onclick = function() {
+                    alert('⚡ You have ' + credits + ' Credit' + (credits === 1 ? '' : 's') + ' ready! Fill in data and click "Generate Barcode" to use 1 credit.');
+                };
+                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' AVAILABLE — Click Generate';
+                if (canvas && currentRaw) canvas.classList.add('locked');
+                if (payOverlay && currentRaw) payOverlay.style.display = 'flex';
+                if (downloadBtns) downloadBtns.classList.add('locked');
+                if (resetBtn) resetBtn.style.display = 'inline';
             } else {
                 badge.className = 'pay-badge locked';
                 badge.onclick = openPayModal;
-                badge.innerHTML = '🔒 0 CREDITS — UNLOCK BARCODES (' + appConfig.currency + ' ' + appConfig.price + ')';
+                badge.innerHTML = '🔒 0 CREDITS — BUY CREDITS (' + appConfig.currency + ' ' + appConfig.price + ')';
                 if (canvas && currentRaw) canvas.classList.add('locked');
                 if (payOverlay && currentRaw) payOverlay.style.display = 'flex';
                 if (downloadBtns) downloadBtns.classList.add('locked');

@@ -722,13 +722,8 @@
                     </div>
                 </div>
 
-                <div id="payIframeContainer" style="display:none; width:100%; margin-top:10px;">
-                    <div style="text-align:right; margin-bottom:6px;">
-                        <a id="paystackNewTabBtn" href="#" target="_blank" style="font-size:0.8rem; color:#58a6ff; text-decoration:underline; font-weight:600;">↗️ Open Paystack in Full Screen</a>
-                    </div>
-                    <div style="width:100%; height:500px; border-radius:10px; overflow:hidden; border:1px solid var(--panel-border);">
-                        <iframe id="paystackIframe" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
-                    </div>
+                <div id="payIframeContainer" style="display:none; width:100%; height:460px; border-radius:10px; overflow:hidden; margin-top:10px; border:1px solid var(--panel-border);">
+                    <iframe id="paystackIframe" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
                 </div>
 
                 <!-- Post-Payment Instant Download Success Screen -->
@@ -1450,8 +1445,6 @@
                     
                     const iframeContainer = document.getElementById('payIframeContainer');
                     const iframe = document.getElementById('paystackIframe');
-                    const newTabLink = document.getElementById('paystackNewTabBtn');
-                    if (newTabLink) newTabLink.href = data.redirectUrl;
                     if (iframeContainer && iframe) {
                         iframe.src = data.redirectUrl;
                         iframeContainer.style.display = 'block';

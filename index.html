@@ -617,13 +617,7 @@
                 </div>
 
                 <div id="paymentForm">
-                    <!-- Payment Method Tabs -->
-                    <div style="display:flex; gap:8px; margin-bottom:15px;">
-                        <button id="tabBtnStk" class="pay-tab active" onclick="switchPayTab('stk')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:var(--accent-color); color:#fff; border:none;">📲 Automated STK Push (Paystack)</button>
-                        <button id="tabBtnCode" class="pay-tab" onclick="switchPayTab('code')" style="flex:1; padding:8px; font-size:0.82rem; font-weight:600; border-radius:6px; cursor:pointer; background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid var(--panel-border);">✉️ Enter M-Pesa Code</button>
-                    </div>
-
-                    <!-- Method B: Paystack STK Push (Default) -->
+                    <!-- Method B: Paystack STK Push (Default & Only Payment Method) -->
                     <div id="payModeStk">
                         <div class="field" style="margin-bottom:15px;">
                             <label>M-Pesa Phone Number</label>
@@ -634,36 +628,12 @@
                             📲 Pay <span class="btnPriceLabel">KES 100</span> via M-Pesa STK Push
                         </button>
                     </div>
-
-                    <!-- Method A: Direct M-Pesa Code -->
-                    <div id="payModeCode" style="display:none;">
-                        <div style="background:rgba(255,255,255,0.04); border:1px solid var(--panel-border); padding:12px; border-radius:8px; margin-bottom:15px; font-size:0.88rem;">
-                            <div style="color:var(--text-muted); margin-bottom:4px;">1. Send <strong>KES 100</strong> via M-Pesa:</div>
-                            <div style="font-size:1.1rem; font-weight:700; color:#3fb950; display:flex; align-items:center; justify-content:space-between; margin:6px 0;">
-                                <span id="mpesaNumberDisplay">M-Pesa: 0795852494</span>
-                                <button onclick="adminAddMpesaCode()" style="font-size:0.75rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:2px 8px; border-radius:12px; cursor:pointer;">🔑 Approve Code</button>
-                            </div>
-                            <div style="color:var(--text-muted); margin-top:8px;">2. Paste your 10-character M-Pesa SMS Code below:</div>
-                        </div>
-                        <div class="field" style="margin-bottom:15px;">
-                            <label>M-Pesa Confirmation Code</label>
-                            <input type="text" id="mpesaCodeInput" placeholder="e.g. SJK1234567" maxlength="10" style="text-transform:uppercase; font-family:monospace; font-size:1.1rem; letter-spacing:1px;">
-                            <div class="hint">Enter 10-character code from your M-Pesa SMS (e.g. SJK1234567)</div>
-                        </div>
-                        <button class="btn mpesa-btn" onclick="verifyMpesaCode()">
-                            ✅ Verify Code &amp; Unlock Barcode
-                        </button>
-                    </div>
                 </div>
 
                 <div id="paymentStatus" class="status-box" style="display:none;">
                     <div class="status-spinner"></div>
                     <div class="status-title" id="statusTitle">Sending STK Push...</div>
                     <div class="status-desc" id="statusDesc">Please check your mobile phone for the M-Pesa prompt and enter your PIN.</div>
-                    
-                    <div style="margin-top:16px; border-top:1px dashed #30363d; padding-top:10px;">
-                        <button class="dice-btn" onclick="switchPayTab('code')" style="color:#3fb950; font-weight:600;">✉️ Didn't receive PIN prompt? Enter M-Pesa Code Instead</button>
-                    </div>
 
                     <div id="mockTestActions" style="display:none; margin-top:12px;">
                         <button class="dice-btn" onclick="forceMockPayment('COMPLETED')">⚡ [Test Mode] Simulate PIN Entry Success</button>
@@ -1030,23 +1000,8 @@
         function switchPayTab(mode) {
             if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
             if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
-
-            const modeCode = document.getElementById('payModeCode');
             const modeStk = document.getElementById('payModeStk');
-            const btnCode = document.getElementById('tabBtnCode');
-            const btnStk = document.getElementById('tabBtnStk');
-
-            if (mode === 'code') {
-                if (modeCode) modeCode.style.display = 'block';
-                if (modeStk) modeStk.style.display = 'none';
-                if (btnCode) { btnCode.style.background = 'var(--accent-color)'; btnCode.style.color = '#fff'; }
-                if (btnStk) { btnStk.style.background = 'rgba(255,255,255,0.08)'; btnStk.style.color = 'var(--text-color)'; }
-            } else {
-                if (modeCode) modeCode.style.display = 'none';
-                if (modeStk) modeStk.style.display = 'block';
-                if (btnStk) { btnStk.style.background = 'var(--accent-color)'; btnStk.style.color = '#fff'; }
-                if (btnCode) { btnCode.style.background = 'rgba(255,255,255,0.08)'; btnCode.style.color = 'var(--text-color)'; }
-            }
+            if (modeStk) modeStk.style.display = 'block';
         }
 
         async function verifyMpesaCode() {

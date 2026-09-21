@@ -83,9 +83,9 @@ module.exports = async (req, res) => {
             // Fallback from amount paid in KES (amount is in kobo)
             if (!credits || credits <= 1) {
               const amountKes = paystackData.data.amount ? Math.round(paystackData.data.amount / 100) : 0;
-              if (amountKes >= 40) credits = 5;
-              else if (amountKes >= 25) credits = 3;
-              else if (amountKes >= 10) credits = 1;
+              if (amountKes >= 400) credits = 5;
+              else if (amountKes >= 250) credits = 3;
+              else if (amountKes >= 100) credits = 1;
             }
 
             return res.status(200).json({

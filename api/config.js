@@ -7,14 +7,10 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const rawPrice = process.env.MPESA_PRICE_KES ? String(process.env.MPESA_PRICE_KES).trim() : '100';
-  const price = (rawPrice === '50' || !rawPrice) ? 100 : (parseInt(rawPrice, 10) || 100);
-  const mockMode = process.env.MOCK_MODE === 'true';
-
   res.status(200).json({
-    price: price,
+    price: 10,
     currency: 'KES',
-    mockMode: mockMode,
+    mockMode: false,
     paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY || 'pk_live_301f2f8a4f913d94ca1341a996b27e85c181bc7e',
     shortcode: process.env.MPESA_SHORTCODE || '174379',
     environment: process.env.MPESA_ENV || 'live'

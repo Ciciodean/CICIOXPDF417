@@ -223,7 +223,7 @@
                     <button onclick="openHelpModal()" class="theme-btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700; margin-left:4px;">📖 How to Use</button>
                 </div>
                 <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
-                    🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 100</span>)
+                    🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 10</span>)
                 </div>
             </div>
         </div>
@@ -544,8 +544,8 @@
                             <div id="payOverlay" class="pay-overlay" style="display:none;">
                                 <div class="pay-overlay-icon">🔒</div>
                                 <h3>WATERMARKED PREVIEW</h3>
-                                <p>Pay <strong class="badge-price">KES 100</strong> via M-Pesa to download PNG/SVG exports and unblur this barcode.</p>
-                                <button class="pay-btn-glow" onclick="openPayModal()">📱 Unlock This Barcode for KES 100</button>
+                                <p>Pay <strong class="badge-price">KES 10</strong> via M-Pesa to download PNG/SVG exports and unblur this barcode.</p>
+                                <button class="pay-btn-glow" onclick="openPayModal()">📱 Unlock This Barcode for KES 10</button>
                             </div>
                         </div>
                     </div>
@@ -676,28 +676,28 @@
                 <div class="price-box" style="padding:12px; margin-bottom:15px;">
                     <div style="font-size:0.85rem; font-weight:700; color:var(--text-color); margin-bottom:10px;">Select Barcode Pass Package:</div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div class="bundle-card" id="bundleCard1" onclick="selectPaymentBundle(100, 1)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:2px solid var(--accent-color); background:rgba(46,160,67,0.1); cursor:pointer;">
+                        <div class="bundle-card" id="bundleCard1" onclick="selectPaymentBundle(10, 1)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:2px solid var(--accent-color); background:rgba(46,160,67,0.1); cursor:pointer;">
                             <div>
-                                <strong style="font-size:0.95rem; display:block;">🎟️ 1 Barcode Pass</strong>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 1 Barcode Pass (Test)</strong>
                                 <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 1 Barcode Generation</span>
                             </div>
-                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 100</div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 10</div>
                         </div>
                         
-                        <div class="bundle-card" id="bundleCard3" onclick="selectPaymentBundle(250, 3)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                        <div class="bundle-card" id="bundleCard3" onclick="selectPaymentBundle(25, 3)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
                             <div>
-                                <strong style="font-size:0.95rem; display:block;">🎟️ 3 Barcodes Bundle <span style="font-size:0.72rem; background:#238636; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">SAVE KES 50</span></strong>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 3 Barcodes Bundle <span style="font-size:0.72rem; background:#238636; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">SAVE KES 5</span></strong>
                                 <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 3 Barcode Generations</span>
                             </div>
-                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 250</div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 25</div>
                         </div>
 
-                        <div class="bundle-card" id="bundleCard5" onclick="selectPaymentBundle(400, 5)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                        <div class="bundle-card" id="bundleCard5" onclick="selectPaymentBundle(40, 5)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
                             <div>
                                 <strong style="font-size:0.95rem; display:block;">🎟️ 5 Barcodes Bundle <span style="font-size:0.72rem; background:#d29922; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">BEST VALUE</span></strong>
                                 <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 5 Barcode Generations</span>
                             </div>
-                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 400</div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 40</div>
                         </div>
                     </div>
                 </div>
@@ -711,7 +711,7 @@
                             <div class="hint" id="phoneHint">Kenyan M-Pesa mobile line (07XX XXX XXX / 01XX XXX XXX)</div>
                         </div>
                         <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
-                            📲 Pay <span class="btnPriceLabel">KES 100</span> via M-Pesa STK Push
+                            📲 Pay <span class="btnPriceLabel">KES 10</span> via M-Pesa STK Push
                         </button>
                     </div>
                 </div>
@@ -902,7 +902,7 @@
             'WY': { dl: '123456789', city: 'CHEYENNE', zip: '82001', address1: '200 W 24TH ST', class: 'C', res: 'NONE', end: 'NONE' }
         };
 
-        let selectedBundle = { price: 100, credits: 1 };
+        let selectedBundle = { price: 10, credits: 1 };
 
         function selectPaymentBundle(price, credits) {
             selectedBundle = { price: price, credits: credits };
@@ -1006,7 +1006,7 @@
         }
 
         // ================= Payment State & Paywall (Per Barcode Generation) =================
-        let appConfig = { price: 100, currency: 'KES', mockMode: false };
+        let appConfig = { price: 10, currency: 'KES', mockMode: false };
         let activePollTimer = null;
         let activeCheckoutID = null;
 

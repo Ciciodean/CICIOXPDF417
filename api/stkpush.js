@@ -34,8 +34,9 @@ module.exports = async (req, res) => {
 
     const phone = formatPhone(body.phone) || '+254795852494';
     const reqAmount = parseInt(body.amount, 10);
-    const price = (reqAmount && reqAmount >= 100) ? reqAmount : 100;
-    const credits = parseInt(body.credits, 10) || (price >= 400 ? 5 : (price >= 250 ? 3 : 1));
+    // Paystack minimum charge for KES is 10 KES (1000 kobo)
+    const price = (reqAmount && reqAmount >= 10) ? reqAmount : 10;
+    const credits = parseInt(body.credits, 10) || (price >= 40 ? 5 : (price >= 25 ? 3 : 1));
     const amountInCents = Math.round(price * 100);
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 

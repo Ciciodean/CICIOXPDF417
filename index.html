@@ -1079,12 +1079,7 @@
             const current = getRemainingCredits();
             const newTotal = current + amountOfCredits;
             safeSetStorage('ciciox_barcode_credits', String(newTotal));
-            
-            if (currentRaw) {
-                consumeCreditIfRequired();
-            } else {
-                updatePayUI();
-            }
+            updatePayUI();
         }
 
         function isCurrentBarcodePaid() {
@@ -1389,6 +1384,18 @@
             closePayModal();
             addPaymentCredits(creditsAdded);
 
+            // Redirect top-level browser window back to full screen main app if inside iframe
+            if (window.top && window.top !== window.self) {
+                try {
+                    window.top.location.href = window.location.origin + window.location.pathname + '?paid=1&credits=' + creditsAdded + '&ref=' + encodeURIComponent(receipt || 'M-PESA');
+                    return;
+                } catch(e) {}
+            }
+
+            showConfirmationBanner(creditsAdded, receipt);
+        }
+
+        function showConfirmationBanner(creditsAdded, receipt) {
             const banner = document.getElementById('paymentConfirmedBanner');
             const bTitle = document.getElementById('bannerTitle');
             const bSub = document.getElementById('bannerSub');
@@ -1405,6 +1412,14 @@
 
         async function checkReturnPayment() {
             const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('paid') === '1') {
+                const addedCredits = parseInt(urlParams.get('credits') || '1', 10);
+                const ref = urlParams.get('ref') || 'M-PESA';
+                showConfirmationBanner(addedCredits, ref);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
             const ref = urlParams.get('reference') || urlParams.get('trxref');
             if (ref) {
                 try {

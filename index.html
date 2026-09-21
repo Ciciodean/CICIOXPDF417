@@ -220,6 +220,7 @@
                     <button onclick="setTheme('cyber')" class="theme-btn" id="thm-cyber">💜 Violet</button>
                     <button onclick="setTheme('emerald')" class="theme-btn" id="thm-emerald">🐍 Emerald</button>
                     <button onclick="setTheme('light')" class="theme-btn" id="thm-light">☀️ Light</button>
+                    <button onclick="openHelpModal()" class="theme-btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700; margin-left:4px;">📖 How to Use</button>
                 </div>
                 <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
                     🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 100</span>)
@@ -592,6 +593,56 @@
             Payloads follow the AAMVA DL/ID Card Design Standard (header structure, subfile designator table, element IDs, MMDDYYYY dates).<br>
             For barcode scanner / parser testing and standards education — encode only data you are authorized to use.
             <span id="resetAccessBtn" class="reset-access-link" style="display:none;" onclick="resetPaymentAccess()">Reset Lock (Dev)</span>
+        </div>
+    </div>
+
+    <!-- ==================== HOW TO USE HELP MODAL ==================== -->
+    <div id="helpModal" class="modal-backdrop" style="display:none;">
+        <div class="modal" style="max-width:580px;">
+            <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            <div class="modal-header" style="text-align:left; border-bottom:1px solid var(--panel-border); padding-bottom:12px; margin-bottom:16px;">
+                <div class="mpesa-logo-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border-color:#58a6ff;">USER GUIDE &amp; INSTRUCTIONS</div>
+                <h2 style="font-size:1.3rem; margin-top:6px;">📖 How to Use CICIOX PDF417 Generator</h2>
+                <p>Follow these 4 simple steps to generate, unlock, and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
+            </div>
+            
+            <div class="modal-body" style="font-size:0.9rem; line-height:1.6; color:var(--text-color);">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">1</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Select State &amp; Fill Customer Data</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Select the US State (e.g. Washington <code>WA</code>, California <code>CA</code>, New York <code>NY</code>). The official AAMVA ISO Issuer ID (IIN) auto-syncs automatically. Enter the Driver's License Number, Last Name, First Name, Date of Birth, Expiration Date, and Address. <em>(Middle Name is completely optional!)</em></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">2</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate PDF417 Barcode</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"⚡ Generate Barcode"</strong> or press Enter. The system validates the license format and renders an AAMVA 2020 PDF417 2D barcode canvas.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Pay KES 100 via M-Pesa STK Push</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"📱 Unlock Barcode (KES 100)"</strong>. Enter your Kenyan M-Pesa phone number (e.g., <code>0712345678</code>) and tap Pay. Paystack sends an automated STK Push PIN prompt directly to your phone. Enter your PIN to complete payment.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">4</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Download PNG / SVG &amp; Inspect Data</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Once confirmed, the barcode automatically unblurs! Click <strong>PNG</strong> or <strong>SVG</strong> to download high-resolution barcode images, inspect raw bytes in the Raw Payload tab, or verify compliance in the Inspector panel.</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:center;">
+                    <button class="btn mpesa-btn" onclick="closeHelpModal()" style="width:100%; max-width:240px; margin:0 auto; padding:10px;">Got It, Let's Start! 🚀</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1101,6 +1152,14 @@
             } catch (e) {
                 alert('❌ Error approving code: ' + e.message);
             }
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
         }
 
         function openPayModal() {

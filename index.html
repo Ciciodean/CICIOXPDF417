@@ -130,7 +130,19 @@
         /* Barcode Canvas & Overlay */
         .barcode-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 340px; position: relative; }
         .canvas-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 10px; padding: 20px; border: 1px solid var(--panel-border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; height: auto; }
+        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; max-height: 300px; width: auto; height: auto; }
+
+        /* Payment lock overlay — locked users only ever see a useless decoy */
+        .canvas-container.locked { overflow: hidden; min-height: 240px; }
+        .canvas-container.locked #barcode-canvas { filter: blur(10px) brightness(0.72); pointer-events: none; }
+        #barcodeLockOverlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 5; align-items: center; justify-content: center; text-align: center; background: rgba(13, 17, 23, 0.55); border-radius: 10px; padding: 16px; box-sizing: border-box; }
+        .canvas-container.locked #barcodeLockOverlay { display: flex; }
+        .lock-card { margin: auto; background: #0d1117; border: 1px solid #f0883e; border-radius: 12px; padding: 22px 26px; text-align: center; max-width: 340px; width: 100%; box-sizing: border-box; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+        .lock-card .lock-icon { font-size: 2.2rem; }
+        .lock-card .lock-title { color: #f0883e; font-weight: 800; font-size: 1.15rem; margin: 6px 0; }
+        .lock-card .lock-sub { color: #e6edf3; font-size: 0.85rem; margin-bottom: 14px; }
+        #lockOverlayBtn { background: #238636; color: #ffffff; border: none; border-radius: 8px; padding: 12px 18px; font-size: 0.95rem; font-weight: 700; cursor: pointer; width: 100%; }
+        #lockOverlayBtn:hover { background: #2ea043; }
         
         .placeholder { color: var(--text-muted); text-align: center; padding: 60px; }
         .placeholder svg { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 15px; }
@@ -214,7 +226,7 @@
                     <button onclick="openHelpModal()" class="theme-btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700; margin-left:4px;">📖 How to Use</button>
                 </div>
                 <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
-                    🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 10</span>)
+                    🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 100</span>)
                 </div>
             </div>
         </div>
@@ -483,19 +495,22 @@
                     <div class="section-header">Barcode Layout &amp; Shape</div>
                     <div class="field"><label>Barcode Columns</label>
                         <select id="barcodeColumns">
+                            <option value="auto" selected>Auto — Real DL Shape (Recommended)</option>
                             <option value="4">4 — Tall / Square</option>
-                            <option value="6" selected>6 — Standard AAMVA ID (Recommended)</option>
+                            <option value="6">6 — Tall</option>
                             <option value="8">8 — Medium Rectangular</option>
                             <option value="10">10 — Wide</option>
                             <option value="12">12 — Extra Wide</option>
                             <option value="16">16 — Thin Strip</option>
+                            <option value="20">20 — Ultra Wide</option>
+                            <option value="30">30 — Max Width</option>
                         </select>
-                        <div class="hint">6 columns matches physical US driver's licenses</div>
+                        <div class="hint" id="colsHint">Auto picks columns to match real license proportions</div>
                     </div>
                     <div class="field"><label>Row Height</label>
                         <select id="barcodeRowHeight">
-                            <option value="3">3 — Compact</option>
-                            <option value="4" selected>4 — Standard ID</option>
+                            <option value="3" selected>3 — Compact (Recommended)</option>
+                            <option value="4">4 — Standard</option>
                             <option value="5">5 — Tall</option>
                             <option value="6">6 — High</option>
                         </select>
@@ -542,6 +557,14 @@
                         
                         <div class="canvas-container">
                             <canvas id="barcode-canvas"></canvas>
+                            <div id="barcodeLockOverlay">
+                                <div class="lock-card">
+                                    <div class="lock-icon">🔒</div>
+                                    <div class="lock-title">Barcode Locked</div>
+                                    <div class="lock-sub" id="lockOverlaySub">Unlock to reveal &amp; download this barcode.</div>
+                                    <button id="lockOverlayBtn" onclick="unlockButtonClicked()">🔓 Unlock Barcode</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -610,7 +633,7 @@
             <div class="modal-header" style="text-align:left; border-bottom:1px solid var(--panel-border); padding-bottom:12px; margin-bottom:16px;">
                 <div class="mpesa-logo-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border-color:#58a6ff;">USER GUIDE &amp; INSTRUCTIONS</div>
                 <h2 style="font-size:1.3rem; margin-top:6px;">📖 How to Use CICIOX PDF417 Generator</h2>
-                <p>Follow these 4 simple steps to purchase credits, generate, and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
+                <p>Follow these 4 simple steps to buy credits, generate, unlock and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
             </div>
             
             <div class="modal-body" style="font-size:0.9rem; line-height:1.6; color:var(--text-color);">
@@ -633,17 +656,25 @@
                 <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
                     <div>
-                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate PDF417 Barcode</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"⚡ Generate PDF417 Barcode"</strong> or press Enter. The system validates the license format and renders a clean, high-resolution AAMVA PDF417 2D barcode canvas. 1 credit is used per generated barcode.</div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate — Locked Preview (Free)</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"Generate PDF417 Barcode"</strong> or press Enter. Generating is <strong>free</strong> — your barcode appears as a blurred <strong>locked preview</strong> that cannot be screenshotted, copied or downloaded until unlocked. The preview updates live as you type.</div>
                     </div>
                 </div>
 
                 <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
                     <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">4</div>
                     <div>
-                        <strong style="color:var(--text-color); font-size:0.98rem;">Download PNG / SVG &amp; Inspect Data</strong>
-                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>📥 PNG (hi-res)</strong> or <strong>📥 SVG (vector)</strong> to download print-ready barcode images, inspect raw bytes in the Raw Payload tab, or verify compliance in the Inspector panel.</div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Unlock &amp; Download (1 Credit)</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Tap <strong>🔓 Unlock Barcode</strong> to reveal it, or tap <strong>🔓 PNG — Unlock &amp; Download</strong> to unlock <em>and</em> download in one tap (1 credit used). <strong>📥 SVG (vector)</strong>, the <strong>Raw Data</strong> tab and <strong>Copy raw</strong> unlock the same way. Check the <strong>Verification</strong> tab to prove scanners can read it.</div>
                     </div>
+                </div>
+
+                <div style="background:rgba(88,166,255,0.07); border:1px solid var(--panel-border); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.82rem; color:var(--text-muted);">
+                    <strong style="color:var(--text-color);">Good to know</strong>
+                    <div style="margin-top:6px;">• <strong>1 credit = 1 unique barcode.</strong> Re-viewing or re-downloading the same unchanged barcode is always free — you never pay twice for it.</div>
+                    <div style="margin-top:4px;">• Changing any detail creates a <strong>new</strong> barcode, which needs 1 credit to unlock.</div>
+                    <div style="margin-top:4px;">• Credits are saved in this browser — <strong>refresh-safe</strong>. Keep using the same browser &amp; device; clearing browser data erases them.</div>
+                    <div style="margin-top:4px;">• Barcode shape is <strong>Auto</strong> (real license proportions). Adjust it anytime under <strong>Barcode Layout &amp; Shape</strong>.</div>
                 </div>
 
                 <div style="margin-top:20px; text-align:center;">
@@ -1103,7 +1134,89 @@
             updatePayUI();
         }
 
+        // ================= Barcode payment lock =================
+        // The REAL barcode is NEVER drawn to the visible canvas until paid.
+        // Unpaid users only see a useless decoy preview + lock overlay, so
+        // screenshots / right-click saves before payment capture nothing usable.
+        const LOCKED_PREVIEW_TEXT = '** LOCKED PREVIEW ** NOT A VALID BARCODE ** BUY CREDITS TO UNLOCK YOUR PDF417 ** SAMPLE ONLY **';
+        let lastLockRenderKey = '';
+
+        function isBarcodeUnlocked() {
+            if (appConfig.price <= 0) return true; // free mode
+            if (!currentRaw) return false;
+            return isCurrentBarcodePaid();
+        }
+
+        function renderRealBarcode() {
+            const canvas = document.getElementById('barcode-canvas');
+            if (!canvas || !currentRaw) return false;
+            try {
+                renderPdf417ToCanvas(canvas, getBwipOpts(undefined, currentRaw), currentRaw);
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function renderLockedPreview() {
+            const canvas = document.getElementById('barcode-canvas');
+            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+            if (!canvas || !bwipEngine) return false;
+            try {
+                bwipEngine.toCanvas(canvas, { bcid: 'pdf417', scale: 3, columns: 8, height: 4, parse: false, includetext: false, text: LOCKED_PREVIEW_TEXT }); // fixed compact decoy shape
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function refreshBarcodeLock() {
+            const container = document.querySelector('.canvas-container');
+            if (!container) return;
+            if (!currentRaw) { // nothing generated yet
+                container.classList.remove('locked');
+                lastLockRenderKey = '';
+                return;
+            }
+            const unlocked = isBarcodeUnlocked();
+            const hash = getBarcodeHash(currentRaw);
+            const key = (unlocked ? 'U' : 'L') + hash + '|' + getVal('barcodeColumns') + 'x' + getVal('barcodeRowHeight') + 'x' + getVal('barcodeBg');
+            if (key !== lastLockRenderKey) {
+                if (unlocked) renderRealBarcode(); else renderLockedPreview();
+                lastLockRenderKey = key;
+            }
+            const overlaySub = document.getElementById('lockOverlaySub');
+            const overlayBtn = document.getElementById('lockOverlayBtn');
+            const btnPng = document.getElementById('btnPng');
+            const btnSvg = document.getElementById('btnSvg');
+            if (unlocked) {
+                container.classList.remove('locked');
+                if (btnPng) btnPng.textContent = '📥 PNG (hi-res)';
+                if (btnSvg) btnSvg.textContent = '📥 SVG (vector)';
+            } else {
+                container.classList.add('locked');
+                const credits = getRemainingCredits();
+                if (overlaySub) overlaySub.textContent = credits > 0
+                    ? 'You have ' + credits + ' credit' + (credits === 1 ? '' : 's') + ' available. Unlock to reveal & download.'
+                    : 'Unlock to reveal & download this barcode.';
+                if (overlayBtn) overlayBtn.innerHTML = '🔓 Unlock Barcode';
+                if (btnPng) btnPng.textContent = '🔓 PNG — Unlock & Download';
+                if (btnSvg) btnSvg.textContent = '🔓 SVG — Unlock & Download';
+            }
+        }
+
+        function unlockButtonClicked() {
+            if (appConfig.price <= 0) { refreshBarcodeLock(); return; }
+            if (!currentRaw) { generateBarcode(); return; }
+            if (isCurrentBarcodePaid()) { refreshBarcodeLock(); updateRawPanel(); return; }
+            if (getRemainingCredits() > 0) {
+                if (consumeCreditIfRequired()) {
+                    refreshBarcodeLock();
+                    updateRawPanel();
+                }
+            } else {
+                openPayModal();
+            }
+        }
+
         function updatePayUI() {
+            try { refreshBarcodeLock(); } catch (e) {}
             const badge = document.getElementById('payStatusBadge');
             const downloadBtns = document.getElementById('downloadBtns');
             const resetBtn = document.getElementById('resetAccessBtn');
@@ -1274,6 +1387,8 @@
 
         function showPaymentSuccessScreen(receipt) {
             consumeCreditIfRequired();
+            refreshBarcodeLock(); // re-render REAL barcode now that it's paid, before snapshot
+            updateRawPanel();
             if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
             if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
             if (document.getElementById('payIframeContainer')) document.getElementById('payIframeContainer').style.display = 'none';
@@ -1341,12 +1456,21 @@
         function resetPaymentAccess() {
             localStorage.removeItem('ciciox_paid_barcodes');
             checkPaymentState();
+            refreshBarcodeLock();
+            updateRawPanel();
             alert('Paid barcodes history cleared.');
         }
 
         function handlePaymentSuccess(creditsAdded, receipt) {
             closePayModal();
             addPaymentCredits(creditsAdded);
+
+            // Auto-unlock the pending barcode with the new credits
+            if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
+                consumeCreditIfRequired();
+            }
+            refreshBarcodeLock();
+            updateRawPanel();
 
             // Redirect top-level browser window back to full screen main app if inside iframe
             if (window.top && window.top !== window.self) {
@@ -1380,6 +1504,11 @@
                 const addedCredits = parseInt(urlParams.get('credits') || '1', 10);
                 const ref = urlParams.get('ref') || 'M-PESA';
                 showConfirmationBanner(addedCredits, ref);
+                if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
+                    consumeCreditIfRequired();
+                }
+                refreshBarcodeLock();
+                updateRawPanel();
                 window.history.replaceState({}, document.title, window.location.pathname);
                 return;
             }
@@ -1683,19 +1812,50 @@
         let liveMode = false;
         let regenTimer = null;
 
-        function getBwipOpts(overrideScale) {
-            const colsVal = getVal('barcodeColumns') || '6';
-            const rowHVal = getVal('barcodeRowHeight') || '4';
+        let lastAutoCols = null;
+
+        // Auto-fit: pick data columns so the symbol keeps real-license proportions (~3.2:1)
+        function autoFitColumns(textLen, rowH) {
+            const estCW = Math.ceil((textLen || 200) * 0.62) + 16;
+            const target = 3.2;
+            const rh = Math.max(1, rowH || 3);
+            let best = 12, bestDiff = 999;
+            for (let c = 6; c <= 30; c += 2) {
+                const rows = Math.ceil(estCW / c);
+                if (rows > 90) continue;
+                const ratio = ((c + 4) * 17) / (rows * rh);
+                const diff = Math.abs(ratio - target);
+                if (diff < bestDiff - 0.0001 || (Math.abs(diff - bestDiff) <= 0.0001 && ratio > target)) {
+                    bestDiff = diff;
+                    best = c;
+                }
+            }
+            return best;
+        }
+
+        function getBwipOpts(overrideScale, textForFit) {
+            const colsVal = getVal('barcodeColumns') || 'auto';
+            const rowHVal = getVal('barcodeRowHeight') || '3';
             const bgMode = getVal('barcodeBg') || 'transparent';
 
-            const parsedCols = parseInt(colsVal, 10);
             const parsedRowH = parseInt(rowHVal, 10);
+            const rowH = (isNaN(parsedRowH) || parsedRowH < 1) ? 3 : parsedRowH;
+
+            let cols;
+            if (colsVal === 'auto') {
+                cols = autoFitColumns(textForFit ? textForFit.length : 0, rowH);
+                lastAutoCols = cols;
+            } else {
+                const parsedCols = parseInt(colsVal, 10);
+                cols = (isNaN(parsedCols) || parsedCols < 1) ? 12 : Math.min(30, parsedCols);
+                lastAutoCols = null;
+            }
 
             const opts = {
                 bcid: 'pdf417',
                 scale: overrideScale || 3,
-                columns: (isNaN(parsedCols) || parsedCols < 1) ? 6 : parsedCols,
-                height: (isNaN(parsedRowH) || parsedRowH < 1) ? 4 : parsedRowH,
+                columns: cols,
+                height: rowH,
                 parse: false,
                 includetext: false
             };
@@ -1705,6 +1865,46 @@
             }
 
             return opts;
+        }
+
+        function getBwipEngine() {
+            return typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+        }
+
+        // Render with auto-widen retry: if data overflows at fitted columns, widen until it fits (max 30)
+        function renderPdf417ToCanvas(canvas, baseOpts, text) {
+            const engine = getBwipEngine();
+            if (!engine) throw new Error('NO_ENGINE');
+            let cols = baseOpts.columns;
+            const tried = {};
+            while (true) {
+                try {
+                    engine.toCanvas(canvas, Object.assign({}, baseOpts, { columns: cols, text: text }));
+                    return cols;
+                } catch (e) {
+                    tried[cols] = true;
+                    const next = cols >= 30 ? -1 : Math.min(30, cols + 2);
+                    if (next === -1 || tried[next]) throw e;
+                    cols = next;
+                }
+            }
+        }
+
+        function renderPdf417ToSVG(baseOpts, text) {
+            const engine = getBwipEngine();
+            if (!engine) throw new Error('NO_ENGINE');
+            let cols = baseOpts.columns;
+            const tried = {};
+            while (true) {
+                try {
+                    return engine.toSVG(Object.assign({}, baseOpts, { columns: cols, text: text }));
+                } catch (e) {
+                    tried[cols] = true;
+                    const next = cols >= 30 ? -1 : Math.min(30, cols + 2);
+                    if (next === -1 || tried[next]) throw e;
+                    cols = next;
+                }
+            }
         }
 
         function generateBarcode() {
@@ -1739,13 +1939,19 @@
                 currentBuilt = built;
                 currentRaw = built.raw;
 
-                if (canvas) bwipEngine.toCanvas(canvas, Object.assign({}, getBwipOpts(), { text: built.raw }));
-
                 if (placeholder) placeholder.style.display = 'none';
                 if (canvas) canvas.style.display = 'block';
                 const dlBtns = document.getElementById('downloadBtns');
                 if (dlBtns) dlBtns.style.display = 'flex';
 
+                refreshBarcodeLock(); // draws REAL barcode only if paid — else locked decoy preview
+                const colsHint = document.getElementById('colsHint');
+                if (colsHint) {
+                    const cv = getVal('barcodeColumns');
+                    colsHint.textContent = (cv === 'auto' && lastAutoCols)
+                        ? ('Auto: ' + lastAutoCols + ' columns picked for real license proportions')
+                        : (cv === 'auto' ? 'Auto picks columns to match real license proportions' : ('Manual: ' + cv + ' columns'));
+                }
                 checkPaymentState();
 
                 updateSpecStrip(built);
@@ -1810,8 +2016,8 @@
             const el = document.getElementById('rawContent');
             if (!currentRaw) return;
 
-            if (!canAccessBarcode()) {
-                el.innerHTML = '<div style="text-align:center; padding: 20px; color:#f0883e;">🔒 Purchase credits (' + appConfig.currency + ' ' + appConfig.price + ') to reveal raw payload and copy code.<br><br><button class="pay-btn-glow" onclick="openPayModal()">📱 Buy Credits (' + appConfig.currency + ' ' + appConfig.price + ')</button></div>';
+            if (appConfig.price > 0 && !isCurrentBarcodePaid()) {
+                el.innerHTML = '<div style="text-align:center; padding: 20px; color:#f0883e;">🔒 This barcode is locked. Unlock to reveal raw payload and copy code.<br><br><button class="pay-btn-glow" onclick="unlockButtonClicked()">🔓 Unlock Barcode</button></div>';
                 return;
             }
 
@@ -1853,11 +2059,17 @@
         }
 
         function copyRaw(ev) {
-            if (!canAccessBarcode()) {
-                openPayModal();
-                return;
-            }
             if (!currentRaw) return;
+            if (appConfig.price > 0 && !isCurrentBarcodePaid()) {
+                if (getRemainingCredits() > 0) {
+                    consumeCreditIfRequired();
+                    refreshBarcodeLock();
+                    updateRawPanel();
+                } else {
+                    openPayModal();
+                    return;
+                }
+            }
             const btn = ev && ev.target;
             const done = () => { if (!btn) return; const t = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = t, 1200); };
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1992,16 +2204,19 @@
                 return;
             }
             consumeCreditIfRequired();
+            refreshBarcodeLock();
+            updateRawPanel();
             if (!currentRaw) return;
-            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
-            if (!bwipEngine) return;
+            if (!getBwipEngine()) return;
             const scale = parseInt(getVal('exportScale') || '6', 10);
             const hi = document.createElement('canvas');
-            bwipEngine.toCanvas(hi, Object.assign({}, getBwipOpts(scale), { text: currentRaw }));
+            renderPdf417ToCanvas(hi, getBwipOpts(scale, currentRaw), currentRaw);
             const l = document.createElement('a');
             l.download = 'CICIOXPDF417-' + getVal('state', 'WA') + '.png';
             l.href = hi.toDataURL('image/png');
+            document.body.appendChild(l);
             l.click();
+            setTimeout(function () { if (l.parentNode) l.parentNode.removeChild(l); }, 500);
         }
 
         function downloadSVG() {
@@ -2010,12 +2225,13 @@
                 return;
             }
             consumeCreditIfRequired();
+            refreshBarcodeLock();
+            updateRawPanel();
             if (!currentRaw) return;
-            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
-            if (!bwipEngine) return;
+            if (!getBwipEngine()) return;
             let svg;
             try {
-                svg = bwipEngine.toSVG(Object.assign({}, getBwipOpts(), { text: currentRaw }));
+                svg = renderPdf417ToSVG(getBwipOpts(undefined, currentRaw), currentRaw);
                 if (typeof svg !== 'string') svg = svg.svg || String(svg);
             } catch (e) {
                 const c = document.getElementById('barcode-canvas');
@@ -2025,7 +2241,9 @@
             const l = document.createElement('a');
             l.download = 'CICIOXPDF417-' + getVal('state', 'WA') + '.svg';
             l.href = URL.createObjectURL(b);
+            document.body.appendChild(l);
             l.click();
+            setTimeout(function () { try { URL.revokeObjectURL(l.href); } catch (e) {} if (l.parentNode) l.parentNode.removeChild(l); }, 1000);
         }
 
         // ================= Tabs =================
@@ -2067,6 +2285,15 @@
             checkReturnPayment();
             checkPaymentState();
 
+            // Anti-copy: block right-click save & drag on locked barcode
+            const cc = document.querySelector('.canvas-container');
+            const bc = document.getElementById('barcode-canvas');
+            if (bc) bc.setAttribute('draggable', 'false');
+            if (cc) {
+                cc.addEventListener('contextmenu', function (e) { if (cc.classList.contains('locked')) e.preventDefault(); });
+                cc.addEventListener('dragstart', function (e) { e.preventDefault(); });
+            }
+
             document.querySelectorAll('#lastName, #firstName, #middleName, #suffix, #dob, #sex, #height, #weight, #eyeColor, #hairColor, #issueDate, #expirationDate, #address1, #address2, #city, #state, #zip, #vehicleClass, #restrictions, #endorsements, #dd, #jurisdictionVersion, #iin, #docType, #aamvaVersion, #licenseNumber, #barcodeColumns, #barcodeRowHeight, #barcodeBg').forEach(el => {
                 el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
                     if (el.id === 'state') updateDLFormat();
@@ -2077,6 +2304,60 @@
             });
 
             document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
+            });
+        };
+    </script>
+</body>
+</html>
+codeBg').forEach(el => {
+                el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+                    if (el.id === 'state') updateDLFormat();
+                    if (el.id === 'height') updateHeightHint();
+                    saveFormState();
+                    scheduleRegen();
+                });
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
+            });
+        };
+    </script>
+</body>
+</html>
+e();
+            });
+        };
+    </script>
+</body>
+</html>
+keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
+            });
+        };
+    </script>
+</body>
+</html>
+
+</html>
+ody>
+</html>
+keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
+            });
+        };
+    </script>
+</body>
+</html>
+html>
+e();
+            });
+        };
+    </script>
+</body>
+</html>
+keydown', e => {
                 if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
             });
         };

@@ -37,28 +37,15 @@ module.exports = async (req, res) => {
     // Provider 1: Paystack Charge Verification
     if (paystackKey) {
       try {
-        // Query 1: Charge endpoint
-        let paystackRes = await fetch(`https://api.paystack.co/charge/${checkoutID}`, {
+        // Always verify via transaction/verify (initialize refs are not charge IDs)
+        let paystackRes = await fetch('https://api.paystack.co/transaction/verify/' + encodeURIComponent(checkoutID), {
           method: 'GET',
           headers: {
             'Authorization': 'Bearer ' + paystackKey,
             'Content-Type': 'application/json'
           }
         });
-
         let paystackData = await paystackRes.json().catch(() => null);
-
-        // Query 2: Transaction verify endpoint fallback
-        if (!paystackData || !paystackData.data) {
-          paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${checkoutID}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': 'Bearer ' + paystackKey,
-              'Content-Type': 'application/json'
-            }
-          });
-          paystackData = await paystackRes.json().catch(() => null);
-        }
 
         if (paystackData && paystackData.data) {
           const status = (paystackData.data.status || '').toLowerCase();
@@ -69,23 +56,24 @@ module.exports = async (req, res) => {
             const token = generateAccessToken(checkoutID, body.phone || '254700000000');
 
             // Extract credits from metadata or calculate from amount
-            let credits = 1;
+            let credits = 0;
             if (paystackData.data.metadata) {
               let meta = paystackData.data.metadata;
               if (typeof meta === 'string') {
                 try { meta = JSON.parse(meta); } catch (e) {}
               }
-              if (meta && meta.credits) {
-                credits = parseInt(meta.credits, 10);
+              if (meta && meta.credits != null) {
+                credits = parseInt(meta.credits, 10) || 0;
               }
             }
 
-            // Fallback from amount paid in KES (amount is in kobo)
-            if (!credits || credits <= 1) {
+            // Fallback from amount paid in KES (Paystack amount is in cents)
+            if (!credits) {
               const amountKes = paystackData.data.amount ? Math.round(paystackData.data.amount / 100) : 0;
               if (amountKes >= 400) credits = 5;
               else if (amountKes >= 250) credits = 3;
               else if (amountKes >= 100) credits = 1;
+              else credits = 1;
             }
 
             return res.status(200).json({

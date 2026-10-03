@@ -1046,7 +1046,7 @@
         }
 
         function saveFormState() {
-            const fields = ['lastName', 'firstName', 'middleName', 'suffix', 'dob', 'sex', 'height', 'weight', 'eyeColor', 'hairColor', 'issueDate', 'expirationDate', 'address1', 'address2', 'city', 'state', 'zip', 'vehicleClass', 'restrictions', 'endorsements', 'licenseNumber', 'iin', 'aamvaVersion', 'jurisdictionVersion'];
+            const fields = ['lastName', 'firstName', 'middleName', 'suffix', 'dob', 'sex', 'height', 'weight', 'eyeColor', 'hairColor', 'issueDate', 'expirationDate', 'address1', 'address2', 'city', 'state', 'zip', 'vehicleClass', 'restrictions', 'endorsements', 'licenseNumber', 'iin', 'aamvaVersion', 'jurisdictionVersion', 'dd', 'docType'];
             const state = {};
             fields.forEach(id => { state[id] = getVal(id); });
             safeSetStorage('ciciox_form_state', JSON.stringify(state));
@@ -1461,9 +1461,28 @@
             alert('Paid barcodes history cleared.');
         }
 
+        function paymentReceiptAlreadyApplied(receipt) {
+            if (!receipt) return false;
+            const key = 'ciciox_applied_receipts';
+            const map = JSON.parse(safeGetStorage(key) || '{}');
+            if (map[receipt]) return true;
+            map[receipt] = Date.now();
+            const keys = Object.keys(map);
+            if (keys.length > 50) keys.sort((a,b) => map[a]-map[b]).slice(0, keys.length-50).forEach(k => delete map[k]);
+            safeSetStorage(key, JSON.stringify(map));
+            return false;
+        }
+
         function handlePaymentSuccess(creditsAdded, receipt) {
             closePayModal();
+            if (paymentReceiptAlreadyApplied(receipt)) {
+                refreshBarcodeLock();
+                updateRawPanel();
+                showConfirmationBanner(0, receipt);
+                return;
+            }
             addPaymentCredits(creditsAdded);
+            saveFormState();
 
             // Auto-unlock the pending barcode with the new credits
             if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
@@ -1472,11 +1491,11 @@
             refreshBarcodeLock();
             updateRawPanel();
 
-            // Redirect top-level browser window back to full screen main app if inside iframe
+            // If Paystack ran inside an iframe, tell the parent to refresh lock/credits
+            // without a full reload (a reload was wiping 1-credit unlocks).
             if (window.top && window.top !== window.self) {
                 try {
-                    window.top.location.href = window.location.origin + window.location.pathname + '?paid=1&credits=' + creditsAdded + '&ref=' + encodeURIComponent(receipt || 'M-PESA');
-                    return;
+                    window.top.postMessage({ type: 'ciciox_paid', credits: creditsAdded, receipt: receipt || 'M-PESA' }, window.location.origin);
                 } catch(e) {}
             }
 
@@ -1490,7 +1509,9 @@
 
             const total = getRemainingCredits();
             if (bTitle) bTitle.innerHTML = '🎉 Payment Confirmed! Added ' + creditsAdded + ' Credit' + (creditsAdded === 1 ? '' : 's') + ' (Total: ' + total + ' Available)';
-            if (bSub) bSub.innerHTML = 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Fill in customer details below and click <strong>"⚡ Generate Barcode"</strong> to use 1 credit.';
+            if (bSub) bSub.innerHTML = isCurrentBarcodePaid()
+                ? 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Your barcode is unlocked — download PNG or SVG now. Editing the form uses another credit.'
+                : 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Click <strong>Generate</strong> then <strong>Unlock</strong> (or PNG) to use 1 credit.';
             
             if (banner) {
                 banner.style.display = 'block';
@@ -1503,12 +1524,15 @@
             if (urlParams.get('paid') === '1') {
                 const addedCredits = parseInt(urlParams.get('credits') || '1', 10);
                 const ref = urlParams.get('ref') || 'M-PESA';
-                showConfirmationBanner(addedCredits, ref);
+                if (!paymentReceiptAlreadyApplied(ref) && addedCredits > 0) {
+                    addPaymentCredits(addedCredits);
+                }
                 if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
                     consumeCreditIfRequired();
                 }
                 refreshBarcodeLock();
                 updateRawPanel();
+                showConfirmationBanner(addedCredits, ref);
                 window.history.replaceState({}, document.title, window.location.pathname);
                 return;
             }
@@ -1802,7 +1826,11 @@
                 vehicleClass: getVal('vehicleClass') || 'AUT',
                 restrictions: getVal('restrictions') || 'NONE',
                 endorsements: getVal('endorsements') || 'NONE',
-                documentDiscriminator: (getVal('dd') || AAMVA.randomDD()).trim()
+                documentDiscriminator: (function () {
+                    let dd = (getVal('dd') || '').trim();
+                    if (!dd) { dd = AAMVA.randomDD(); setVal('dd', dd); }
+                    return dd;
+                })()
             };
         }
 
@@ -2284,6 +2312,20 @@
 
             checkReturnPayment();
             checkPaymentState();
+            window.addEventListener('message', function (ev) {
+                if (ev.origin !== window.location.origin) return;
+                const d = ev.data || {};
+                if (d.type === 'ciciox_paid') {
+                    if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
+                        consumeCreditIfRequired();
+                    }
+                    refreshBarcodeLock();
+                    updateRawPanel();
+                    updatePayUI();
+                    showConfirmationBanner(d.credits || 0, d.receipt);
+                    closePayModal();
+                }
+            });
 
             // Anti-copy: block right-click save & drag on locked barcode
             const cc = document.querySelector('.canvas-container');

@@ -224,6 +224,7 @@
                     <button onclick="setTheme('emerald')" class="theme-btn" id="thm-emerald">🐍 Emerald</button>
                     <button onclick="setTheme('light')" class="theme-btn" id="thm-light">☀️ Light</button>
                     <button onclick="openHelpModal()" class="theme-btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700; margin-left:4px;">📖 How to Use</button>
+                    <a href="https://t.me/visualarcediting" target="_blank" rel="noopener noreferrer" class="theme-btn" style="background:rgba(34,158,217,0.15); border:1px solid #229ED9; color:#7dd3fc; font-weight:700; text-decoration:none; display:inline-flex; align-items:center;">💬 Help</a>
                 </div>
                 <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
                     🔒 UNLOCK THIS BARCODE (<span class="badge-price">KES 100</span>)
@@ -677,6 +678,11 @@
                     <div style="margin-top:4px;">• Barcode shape is <strong>Auto</strong> (real license proportions). Adjust it anytime under <strong>Barcode Layout &amp; Shape</strong>.</div>
                 </div>
 
+                <a href="https://t.me/visualarcediting" target="_blank" rel="noopener noreferrer" style="display:block; text-decoration:none; background:rgba(34,158,217,0.12); border:1px solid #229ED9; border-radius:10px; padding:14px 16px; margin-bottom:16px; text-align:center;">
+                    <div style="font-weight:800; color:#7dd3fc; font-size:1rem;">💬 Need help? Message us on Telegram</div>
+                    <div style="color:var(--text-muted); font-size:0.82rem; margin-top:4px;">Payments, unlocks, downloads — we reply at <strong style="color:#7dd3fc;">t.me/visualarcediting</strong></div>
+                </a>
+
                 <div style="margin-top:20px; text-align:center;">
                     <button class="btn mpesa-btn" onclick="closeHelpModal()" style="width:100%; max-width:240px; margin:0 auto; padding:10px;">Got It, Let's Start! 🚀</button>
                 </div>
@@ -739,6 +745,9 @@
                         <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
                             📲 Pay <span class="btnPriceLabel">KES 100</span> via M-Pesa STK Push
                         </button>
+                        <div style="text-align:center; margin-top:12px; font-size:0.82rem; color:var(--text-muted);">
+                            Payment stuck? <a href="https://t.me/visualarcediting" target="_blank" rel="noopener noreferrer" style="color:#7dd3fc; font-weight:700;">Chat us on Telegram</a>
+                        </div>
                     </div>
                 </div>
 

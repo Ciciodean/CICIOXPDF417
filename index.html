@@ -1492,11 +1492,8 @@
             }
             addPaymentCredits(creditsAdded);
             saveFormState();
-
-            // Auto-unlock the pending barcode with the new credits
-            if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
-                consumeCreditIfRequired();
-            }
+            // Do NOT auto-spend the credit on whatever sample/old barcode is on screen.
+            // Credits sit in the wallet until the customer Unlock/PNG their real barcode.
             refreshBarcodeLock();
             updateRawPanel();
 
@@ -1518,9 +1515,7 @@
 
             const total = getRemainingCredits();
             if (bTitle) bTitle.innerHTML = '🎉 Payment Confirmed! Added ' + creditsAdded + ' Credit' + (creditsAdded === 1 ? '' : 's') + ' (Total: ' + total + ' Available)';
-            if (bSub) bSub.innerHTML = isCurrentBarcodePaid()
-                ? 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Your barcode is unlocked — download PNG or SVG now. Editing the form uses another credit.'
-                : 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Click <strong>Generate</strong> then <strong>Unlock</strong> (or PNG) to use 1 credit.';
+            if (bSub) bSub.innerHTML = 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Fill in the <strong>real customer details</strong>, click <strong>Generate</strong>, then <strong>Unlock</strong> or <strong>PNG</strong> — that uses 1 credit. Sample data on screen is not charged.';
             
             if (banner) {
                 banner.style.display = 'block';
@@ -1535,9 +1530,6 @@
                 const ref = urlParams.get('ref') || 'M-PESA';
                 if (!paymentReceiptAlreadyApplied(ref) && addedCredits > 0) {
                     addPaymentCredits(addedCredits);
-                }
-                if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
-                    consumeCreditIfRequired();
                 }
                 refreshBarcodeLock();
                 updateRawPanel();
@@ -2325,9 +2317,6 @@
                 if (ev.origin !== window.location.origin) return;
                 const d = ev.data || {};
                 if (d.type === 'ciciox_paid') {
-                    if (typeof currentRaw !== 'undefined' && currentRaw && !isCurrentBarcodePaid() && getRemainingCredits() > 0) {
-                        consumeCreditIfRequired();
-                    }
                     refreshBarcodeLock();
                     updateRawPanel();
                     updatePayUI();
